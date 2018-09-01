@@ -29,9 +29,7 @@ class MainActivity : AppCompatActivity() {
         launch(parent = rootJob) {
             val result = queryService.query("Hobbit 1977")
 
-            result.forEach {
-                Log.d(Tag, it.toString())
-            }
+            Log.d(Tag, result.toString())
         }
     }
 }

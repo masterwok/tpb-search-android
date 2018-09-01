@@ -4,8 +4,10 @@ import android.util.Log
 import com.masterwok.tpbsearchandroid.contracts.QueryService
 import com.masterwok.tpbsearchandroid.models.PagedResult
 import com.masterwok.tpbsearchandroid.models.SearchResultItem
+import kotlinx.coroutines.experimental.JobCancellationException
 import kotlinx.coroutines.experimental.TimeoutCancellationException
 import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.channels.produce
 import kotlinx.coroutines.experimental.withTimeout
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -33,18 +35,53 @@ class QueryService constructor(
         Jsoup.connect(url).get()
     }
 
+    private fun List<PagedResult>.flatten(
+            pageIndex: Int
+    ): PagedResult = PagedResult(
+            pageIndex = pageIndex
+            , lastPageIndex = maxBy { it.lastPageIndex }?.lastPageIndex ?: 0
+            , items = flatMap { it.items }.distinctBy { it.infoHash }
+    )
+
+    private fun producePagedResults(
+            queryFactories: List<(query: String, pageIndex: Int) -> String>
+            , query: String
+            , pageIndex: Int
+            , requestTimeout: Long
+    ) = produce {
+        queryFactories
+                .map { async { queryHost(it, query, pageIndex, requestTimeout) } }
+                .forEach {
+                    val pagedResult = it.await()
+
+                    if (pagedResult.itemCount > 0) {
+                        send(pagedResult)
+                    }
+                }
+    }
+
     override suspend fun query(
             query: String
             , pageIndex: Int
             , requestTimeout: Long
-    ): List<PagedResult> {
-        return queryFactories
-                .map { async { queryHost(it, query, pageIndex, requestTimeout) } }
-                .map { it.await() }
+            , maxSuccessfulHosts: Int
+    ): PagedResult {
+        val producer = producePagedResults(
+                queryFactories
+                , query
+                , pageIndex
+                , requestTimeout
+        )
 
-//        val job = async { queryHost(queryFactories.first(), query, 0, requestTimeout) }
-//
-//        return arrayListOf(job.await())
+        val range = (1..Math.min(queryFactories.size, maxSuccessfulHosts))
+
+        val pagedResults = range.map {
+            producer.receive()
+        }.flatten(pageIndex)
+
+        producer.cancel()
+
+        return pagedResults
     }
 
     private suspend fun queryHost(
@@ -62,13 +99,14 @@ class QueryService constructor(
             }
         } catch (ex: TimeoutCancellationException) {
             Log.w(Tag, "Request timeout: $requestUrl")
+        } catch (ex: JobCancellationException) {
+            // Ignored..
         } catch (ex: Exception) {
             Log.w(Tag, "Request failed: $requestUrl")
         }
 
         return PagedResult(
-                requestUrl
-                , pageIndex = pageIndex
+                pageIndex = pageIndex
                 , lastPageIndex = response?.tryParseLastPageIndex() ?: 0
                 , items = response?.select(SearchResultPath)
                 ?.mapNotNull { it.tryParseSearchResultItem() }
