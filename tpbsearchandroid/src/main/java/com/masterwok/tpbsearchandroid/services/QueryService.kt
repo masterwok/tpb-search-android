@@ -1,13 +1,14 @@
 package com.masterwok.tpbsearchandroid.services
 
 import android.util.Log
-import com.masterwok.tpbsearchandroid.constants.Config
 import com.masterwok.tpbsearchandroid.contracts.QueryService
 import com.masterwok.tpbsearchandroid.models.SearchResultItem
+import kotlinx.coroutines.experimental.TimeoutCancellationException
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.withTimeout
-import java.net.HttpURLConnection
-import java.net.URL
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
 import java.util.concurrent.TimeUnit
 
 class QueryService constructor(
@@ -16,64 +17,72 @@ class QueryService constructor(
 
     companion object {
         private const val Tag = "QueryService"
-        private const val UserAgent = "Mozilla/5.0"
+
         private const val RequestTimeout = 5000L
 
-        private val TorrentItemRegex = Regex("""<a[\s\S]*?(?=detLink)[\s\S]*?(?=>)>(.*)</a>[\s\S]*?(?=magnet:)(.*)</a>[\s\S]*?(?=>\d*</td>)>(\d*)</td>[\s\S]*?(?=>\d*</td>)>(\d*)</td>""")
+        private const val TitleSelectPath = "td:nth-child(2) > div"
+        private const val MagnetSelectPath = "td:nth-child(2) > a:nth-child(2)"
+        private const val SeedersSelectPath = "td:nth-child(3)"
+        private const val LeechersSelectPath = "td:nth-child(4)"
+
+        private val InfoHashRegex = Regex("btih:(.*)&dn")
     }
 
-    private fun makeRequest(url: String) = async {
-        val urlConnection = URL(url).openConnection() as HttpURLConnection
-
-        urlConnection.setRequestProperty("User-Agent", UserAgent)
-
-        val response = urlConnection
-                .inputStream
-                .bufferedReader()
-                .use { it.readText() }
-
-        urlConnection.disconnect()
-
-        response
+    private fun makeRequest(url: String) = async<Document> {
+        Jsoup.connect(url).get()
     }
-
-    private fun buildUrl(
-            host: String
-            , query: String
-            , pageIndex: Int
-    ): String = "$host/search/$query/$pageIndex/7"
 
     private suspend fun queryHost(
             host: String
             , query: String
             , pageIndex: Int
     ): List<SearchResultItem> {
-        val url = buildUrl(host, query, pageIndex)
-        var response = ""
+        val url = "$host/search/$query/$pageIndex/7"
+        var response: Document? = null
 
         try {
             withTimeout(RequestTimeout, TimeUnit.MILLISECONDS) {
                 response = makeRequest(url).await()
             }
-        } catch (ex: Exception) {
+        } catch (ex: TimeoutCancellationException) {
             Log.w(Tag, "Request timeout: $url")
+        } catch (ex: Exception) {
+            Log.w(Tag, "Request failed: $url")
         }
 
-        return TorrentItemRegex
-                .findAll(response)
-                .map { it.toSearchResultItem() }
-                .toList()
+        val searchResultTableRows = response?.select("table#searchResult tbody tr")
+
+        return searchResultTableRows
+                ?.mapNotNull { it.tryParseSearchResultItem() }
+                ?.toList()
+                ?: ArrayList()
     }
 
-    private fun MatchResult.toSearchResultItem() = SearchResultItem(
-            title = groupValues[1]
-            , magnetUri = groupValues[2]
-            , infoHash = getInfoHash(groupValues[2])
-            , seeds = Integer.parseInt(groupValues[3])
-            , leechers = Integer.parseInt(groupValues[4])
-    )
+    private fun Element.tryParseSearchResultItem(): SearchResultItem? {
+        try {
+            val magnet = select(MagnetSelectPath)
+                    ?.first()
+                    ?.attr("href")
+                    ?: ""
 
-    private fun getInfoHash(magnet: String): String = Regex("""btih:(.*)&dn""")
+            return SearchResultItem(
+                    title = select(TitleSelectPath)?.first()?.text() ?: ""
+                    , magnet = magnet
+                    , infoHash = getInfoHash(magnet)
+                    , seeders = Integer.parseInt(select(SeedersSelectPath)?.first()?.text() ?: "0")
+                    , leechers = Integer.parseInt(select(LeechersSelectPath)?.first()?.text()
+                    ?: "0")
+
+            )
+
+        } catch (ex: Exception) {
+            Log.w(Tag, "Failed to parse result: ${ex.message}")
+        }
+
+        return null
+    }
+
+    private fun getInfoHash(magnet: String): String = InfoHashRegex
             .find(magnet)
             ?.groupValues
             ?.get(1)
@@ -81,14 +90,14 @@ class QueryService constructor(
 
 
     suspend fun query(query: String): List<SearchResultItem> {
-        val result = Config
-                .Hosts
+        return hosts
                 .map { async { queryHost(it, query, 0) } }
                 .flatMap { it.await() }
-                .sortedByDescending { it.seeds }
+                .sortedByDescending { it.seeders }
                 .distinctBy { it.infoHash }
-
-        return result
+//        async { queryHost(Config.Hosts.first(), query, 0) }
+//
+//        return ArrayList()
     }
 
 }

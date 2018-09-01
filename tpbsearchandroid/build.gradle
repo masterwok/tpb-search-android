@@ -41,6 +41,10 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$version_kotlinx_coroutines"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$version_kotlinx_coroutines"
+
+    // Jsoup
+    implementation 'org.jsoup:jsoup:1.11.3'
+
 }
 repositories {
     mavenCentral()

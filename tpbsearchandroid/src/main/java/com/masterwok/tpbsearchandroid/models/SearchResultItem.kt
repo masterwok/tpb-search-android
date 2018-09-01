@@ -2,8 +2,8 @@ package com.masterwok.tpbsearchandroid.models
 
 data class SearchResultItem(
         val title: String
-        , val magnetUri: String
+        , val magnet: String
         , val infoHash: String
-        , val seeds: Int
+        , val seeders: Int
         , val leechers: Int
 )
