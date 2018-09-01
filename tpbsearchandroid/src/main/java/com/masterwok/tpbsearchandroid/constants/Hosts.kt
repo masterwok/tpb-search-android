@@ -33,8 +33,9 @@ private fun queryStringQuery(
 
 
 /**
- * Default host/clones of thepiratebay.org. Hosts may be provided
- * to the [@see QueryService] as a constructor argument.
+ * A [List] of factories for creating a query string URL. Clones have different ways of
+ * creating query URLs. Luckily it seems like there are only a few at the moment. As more
+ * are added, query factories can be added and adjusted for each of the defined hosts.
  */
 @JvmField
 val QueryFactories: List<(query: String, pageIndex: Int) -> String> = listOf(
