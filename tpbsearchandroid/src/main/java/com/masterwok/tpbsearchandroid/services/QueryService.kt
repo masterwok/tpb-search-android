@@ -78,6 +78,7 @@ class QueryService constructor(
         val results: ArrayList<PagedResult> = ArrayList()
 
         try {
+            // Timeout so we don't hang, use the results gathered so far.
             withTimeout(queryTimeout, TimeUnit.MILLISECONDS) {
                 range.forEach { results.add(producer.receive()) }
             }
@@ -85,6 +86,7 @@ class QueryService constructor(
             Log.w(Tag, "Query timed out, successful queries: ${results.size}")
         } finally {
             producer.cancel()
+
             return results.flatten(pageIndex)
         }
     }
