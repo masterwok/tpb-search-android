@@ -19,8 +19,6 @@ class QueryService constructor(
     companion object {
         private const val Tag = "QueryService"
 
-        private const val DefaultRequestTimeout = 10000L
-
         private const val SearchResultPath = "table#searchResult tbody tr"
         private const val TitleSelectPath = "td:nth-child(2) > div"
         private const val MagnetSelectPath = "td:nth-child(2) > a:nth-child(2)"
@@ -35,12 +33,13 @@ class QueryService constructor(
         Jsoup.connect(url).get()
     }
 
-    suspend fun query(
+    override suspend fun query(
             query: String
-            , requestTimeout: Long = DefaultRequestTimeout
+            , pageIndex: Int
+            , requestTimeout: Long
     ): List<PagedResult> {
         return hosts
-                .map { async { queryHost(it, query, 0, requestTimeout) } }
+                .map { async { queryHost(it, query, pageIndex, requestTimeout) } }
                 .map { it.await() }
 
 //        val job = async { queryHost(hosts.first(), query, 0, requestTimeout) }
@@ -71,7 +70,7 @@ class QueryService constructor(
                 requestUrl
                 , pageIndex = pageIndex
                 , lastPageIndex = response?.tryParseLastPageIndex() ?: 0
-                , results = response?.select(SearchResultPath)
+                , items = response?.select(SearchResultPath)
                 ?.mapNotNull { it.tryParseSearchResultItem() }
                 ?.sortedByDescending { it.seeders }
                 ?.distinctBy { it.infoHash }
@@ -110,10 +109,8 @@ class QueryService constructor(
             )
 
         } catch (ex: Exception) {
-            Log.w(Tag, "Failed to parse result: ${ex.message}")
+            return null
         }
-
-        return null
     }
 
     private fun getInfoHash(magnet: String): String = InfoHashRegex
