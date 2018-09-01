@@ -13,7 +13,7 @@ import org.jsoup.nodes.Element
 import java.util.concurrent.TimeUnit
 
 class QueryService constructor(
-        private val hosts: List<String>
+        private val queryFactories: List<(query: String, pageIndex: Int) -> String>
 ) : QueryService {
 
     companion object {
@@ -38,22 +38,23 @@ class QueryService constructor(
             , pageIndex: Int
             , requestTimeout: Long
     ): List<PagedResult> {
-        return hosts
+        return queryFactories
                 .map { async { queryHost(it, query, pageIndex, requestTimeout) } }
                 .map { it.await() }
 
-//        val job = async { queryHost(hosts.first(), query, 0, requestTimeout) }
+//        val job = async { queryHost(queryFactories.first(), query, 0, requestTimeout) }
 //
 //        return arrayListOf(job.await())
     }
 
     private suspend fun queryHost(
-            host: String
+            queryFactory: (query: String, pageIndex: Int) -> String
             , query: String
             , pageIndex: Int
             , requestTimeout: Long
     ): PagedResult {
-        val requestUrl = "$host/search/$query/$pageIndex/7"
+//        val requestUrl = "$host/search/$query/$pageIndex/7"
+        val requestUrl = queryFactory(query, pageIndex)
         var response: Document? = null
 
         try {

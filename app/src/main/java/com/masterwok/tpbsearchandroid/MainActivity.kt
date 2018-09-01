@@ -4,7 +4,7 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import com.masterwok.tpbsearchandroid.common.AndroidJob
-import com.masterwok.tpbsearchandroid.constants.Hosts
+import com.masterwok.tpbsearchandroid.constants.QueryFactories
 import com.masterwok.tpbsearchandroid.services.QueryService
 import kotlinx.coroutines.experimental.launch
 
@@ -24,10 +24,10 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
 
-        val queryService = QueryService(Hosts)
+        val queryService = QueryService(QueryFactories)
 
         launch(parent = rootJob) {
-            val result = queryService.query("Batman")
+            val result = queryService.query("Hobbit 1977")
 
             result.forEach {
                 Log.d(Tag, it.toString())
