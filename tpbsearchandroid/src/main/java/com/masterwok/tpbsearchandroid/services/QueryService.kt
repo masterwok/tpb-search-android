@@ -53,7 +53,6 @@ class QueryService constructor(
             , pageIndex: Int
             , requestTimeout: Long
     ): PagedResult {
-//        val requestUrl = "$host/search/$query/$pageIndex/7"
         val requestUrl = queryFactory(query, pageIndex)
         var response: Document? = null
 
