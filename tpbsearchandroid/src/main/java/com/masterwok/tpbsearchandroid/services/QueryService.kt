@@ -39,13 +39,13 @@ class QueryService constructor(
             query: String
             , requestTimeout: Long = DefaultRequestTimeout
     ): List<PagedResult> {
-//        return hosts
-//                .map { async { queryHost(it, query, 0, requestTimeout) } }
-//                .map { it.await() }
+        return hosts
+                .map { async { queryHost(it, query, 0, requestTimeout) } }
+                .map { it.await() }
 
-        val job = async { queryHost(hosts.first(), query, 0, requestTimeout) }
-
-        return arrayListOf(job.await())
+//        val job = async { queryHost(hosts.first(), query, 0, requestTimeout) }
+//
+//        return arrayListOf(job.await())
     }
 
     private suspend fun queryHost(
@@ -89,7 +89,6 @@ class QueryService constructor(
 
         Math.max(pageCount - 1, 0)
     } catch (ex: Exception) {
-        Log.w(Tag, "Failed to parse page count: ${ex.message}")
         0
     }
 
