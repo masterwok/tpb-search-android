@@ -63,6 +63,7 @@ class QueryService constructor(
     override suspend fun query(
             query: String
             , pageIndex: Int
+            , queryTimeout: Long
             , requestTimeout: Long
             , maxSuccessfulHosts: Int
     ): PagedResult {
@@ -74,14 +75,18 @@ class QueryService constructor(
         )
 
         val range = (1..Math.min(queryFactories.size, maxSuccessfulHosts))
+        val results: ArrayList<PagedResult> = ArrayList()
 
-        val pagedResults = range.map {
-            producer.receive()
-        }.flatten(pageIndex)
-
-        producer.cancel()
-
-        return pagedResults
+        try {
+            withTimeout(queryTimeout, TimeUnit.MILLISECONDS) {
+                range.forEach { results.add(producer.receive()) }
+            }
+        } catch (ex: TimeoutCancellationException) {
+            Log.w(Tag, "Query timed out, successful queries: ${results.size}")
+        } finally {
+            producer.cancel()
+            return results.flatten(pageIndex)
+        }
     }
 
     private suspend fun queryHost(

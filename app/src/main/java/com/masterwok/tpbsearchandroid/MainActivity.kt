@@ -6,6 +6,7 @@ import android.util.Log
 import com.masterwok.tpbsearchandroid.common.AndroidJob
 import com.masterwok.tpbsearchandroid.constants.QueryFactories
 import com.masterwok.tpbsearchandroid.contracts.DefaultMaxSuccessfulHosts
+import com.masterwok.tpbsearchandroid.contracts.DefaultQueryTimeout
 import com.masterwok.tpbsearchandroid.contracts.DefaultRequestTimeout
 import com.masterwok.tpbsearchandroid.services.QueryService
 import kotlinx.coroutines.experimental.launch
@@ -32,6 +33,7 @@ class MainActivity : AppCompatActivity() {
             val result = queryService.query(
                     query = "The Fifth Element"
                     , pageIndex = 0
+                    , queryTimeout = DefaultQueryTimeout
                     , requestTimeout = DefaultRequestTimeout
                     , maxSuccessfulHosts = DefaultMaxSuccessfulHosts
             )
