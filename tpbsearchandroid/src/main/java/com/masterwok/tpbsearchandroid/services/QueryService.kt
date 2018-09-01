@@ -39,12 +39,13 @@ class QueryService constructor(
             query: String
             , requestTimeout: Long = DefaultRequestTimeout
     ): List<PagedResult> {
-        return hosts
-                .map { async { queryHost(it, query, 0, requestTimeout) } }
-                .map { it.await() }
+//        return hosts
+//                .map { async { queryHost(it, query, 0, requestTimeout) } }
+//                .map { it.await() }
 
-//        async { queryHost(hosts.first(), query, 0) }
-//        return ArrayList()
+        val job = async { queryHost(hosts.first(), query, 0, requestTimeout) }
+
+        return arrayListOf(job.await())
     }
 
     private suspend fun queryHost(
