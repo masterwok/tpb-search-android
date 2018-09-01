@@ -10,6 +10,10 @@ import kotlinx.coroutines.experimental.launch
 
 class MainActivity : AppCompatActivity() {
 
+    companion object {
+        const val Tag = "Demo"
+    }
+
     private val rootJob: AndroidJob = AndroidJob(lifecycle)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,11 +27,11 @@ class MainActivity : AppCompatActivity() {
         val queryService = QueryService(Config.Hosts)
 
         launch(parent = rootJob) {
-            val result = queryService.query("Hackers 1995")
+            val result = queryService.query("Batman")
 
-            Log.d("DERP", result.size.toString())
-
-
+            result.forEach {
+                Log.d(Tag, it.toString())
+            }
         }
     }
 }

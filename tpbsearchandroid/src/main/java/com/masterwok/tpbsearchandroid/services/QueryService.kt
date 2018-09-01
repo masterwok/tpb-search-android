@@ -2,6 +2,7 @@ package com.masterwok.tpbsearchandroid.services
 
 import android.util.Log
 import com.masterwok.tpbsearchandroid.contracts.QueryService
+import com.masterwok.tpbsearchandroid.models.PagedResult
 import com.masterwok.tpbsearchandroid.models.SearchResultItem
 import kotlinx.coroutines.experimental.TimeoutCancellationException
 import kotlinx.coroutines.experimental.async
@@ -18,12 +19,14 @@ class QueryService constructor(
     companion object {
         private const val Tag = "QueryService"
 
-        private const val RequestTimeout = 5000L
+        private const val DefaultRequestTimeout = 10000L
 
+        private const val SearchResultPath = "table#searchResult tbody tr"
         private const val TitleSelectPath = "td:nth-child(2) > div"
         private const val MagnetSelectPath = "td:nth-child(2) > a:nth-child(2)"
         private const val SeedersSelectPath = "td:nth-child(3)"
         private const val LeechersSelectPath = "td:nth-child(4)"
+        private const val PageSelectPath = "body > div:nth-child(6) > a"
 
         private val InfoHashRegex = Regex("btih:(.*)&dn")
     }
@@ -32,30 +35,61 @@ class QueryService constructor(
         Jsoup.connect(url).get()
     }
 
+    suspend fun query(
+            query: String
+            , requestTimeout: Long = DefaultRequestTimeout
+    ): List<PagedResult> {
+        return hosts
+                .map { async { queryHost(it, query, 0, requestTimeout) } }
+                .map { it.await() }
+
+//        async { queryHost(hosts.first(), query, 0) }
+//        return ArrayList()
+    }
+
     private suspend fun queryHost(
             host: String
             , query: String
             , pageIndex: Int
-    ): List<SearchResultItem> {
-        val url = "$host/search/$query/$pageIndex/7"
+            , requestTimeout: Long
+    ): PagedResult {
+        val requestUrl = "$host/search/$query/$pageIndex/7"
         var response: Document? = null
 
         try {
-            withTimeout(RequestTimeout, TimeUnit.MILLISECONDS) {
-                response = makeRequest(url).await()
+            withTimeout(requestTimeout, TimeUnit.MILLISECONDS) {
+                response = makeRequest(requestUrl).await()
             }
         } catch (ex: TimeoutCancellationException) {
-            Log.w(Tag, "Request timeout: $url")
+            Log.w(Tag, "Request timeout: $requestUrl")
         } catch (ex: Exception) {
-            Log.w(Tag, "Request failed: $url")
+            Log.w(Tag, "Request failed: $requestUrl")
         }
 
-        val searchResultTableRows = response?.select("table#searchResult tbody tr")
-
-        return searchResultTableRows
+        return PagedResult(
+                requestUrl
+                , pageIndex = pageIndex
+                , lastPageIndex = response?.tryParseLastPageIndex() ?: 0
+                , results = response?.select(SearchResultPath)
                 ?.mapNotNull { it.tryParseSearchResultItem() }
+                ?.sortedByDescending { it.seeders }
+                ?.distinctBy { it.infoHash }
                 ?.toList()
                 ?: ArrayList()
+        )
+    }
+
+    private fun Element.tryParseLastPageIndex(): Int = try {
+        val pageCount = Integer.parseInt(select(PageSelectPath)
+                ?.dropLast(1)
+                ?.last()
+                ?.text() ?: "0"
+        )
+
+        Math.max(pageCount - 1, 0)
+    } catch (ex: Exception) {
+        Log.w(Tag, "Failed to parse page count: ${ex.message}")
+        0
     }
 
     private fun Element.tryParseSearchResultItem(): SearchResultItem? {
@@ -87,17 +121,5 @@ class QueryService constructor(
             ?.groupValues
             ?.get(1)
             ?: ""
-
-
-    suspend fun query(query: String): List<SearchResultItem> {
-        return hosts
-                .map { async { queryHost(it, query, 0) } }
-                .flatMap { it.await() }
-                .sortedByDescending { it.seeders }
-                .distinctBy { it.infoHash }
-//        async { queryHost(Config.Hosts.first(), query, 0) }
-//
-//        return ArrayList()
-    }
 
 }
