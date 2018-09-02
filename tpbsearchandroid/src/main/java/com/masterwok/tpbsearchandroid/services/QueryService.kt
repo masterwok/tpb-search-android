@@ -109,11 +109,6 @@ class QueryService constructor(
         } catch (ex: Exception) {
             Log.e(Tag, "Unknown error occurred: ${ex.message}")
         } finally {
-
-            if (results.size == 0) {
-                val x = 1
-            }
-
             return results.flatten(pageIndex)
         }
     }
