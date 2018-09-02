@@ -10,4 +10,12 @@ data class SearchResultItem(
         , val infoHash: String
         , val seeders: Int
         , val leechers: Int
-)
+) {
+    override fun toString(): String {
+        return "title: $title" +
+                ", seeders: $seeders" +
+                ", leechers: $leechers" +
+                ", infoHash: $infoHash" +
+                ", magnet: $magnet"
+    }
+}

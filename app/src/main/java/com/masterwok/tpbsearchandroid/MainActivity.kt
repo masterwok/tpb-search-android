@@ -32,7 +32,7 @@ class MainActivity : AppCompatActivity() {
         launch(parent = rootJob) {
             val result = queryService.query(
                     query = "The Fifth Element"
-                    , pageIndex = 0
+                    , pageIndex = 4
                     , queryTimeout = DefaultQueryTimeout
                     , requestTimeout = DefaultRequestTimeout
                     , maxSuccessfulHosts = DefaultMaxSuccessfulHosts

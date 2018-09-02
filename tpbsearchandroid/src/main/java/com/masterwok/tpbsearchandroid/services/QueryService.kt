@@ -44,33 +44,45 @@ class QueryService constructor(
             , query: String
             , pageIndex: Int
             , maxSuccessfulHosts: Int
+            , queryTimeout: Long
             , requestTimeout: Long
     ): ArrayList<PagedResult> {
         val results = ArrayList<PagedResult>()
         val rootJob = Job()
 
         try {
-            queryFactories.map {
-                async(parent = rootJob) {
-                    val pagedResult = queryHost(
-                            it
-                            , query
-                            , pageIndex
-                            , requestTimeout
-                    )
+            withTimeout(queryTimeout, TimeUnit.MILLISECONDS) {
+                queryFactories.map {
+                    async(parent = rootJob) {
+                        val pagedResult = queryHost(
+                                it
+                                , query
+                                , pageIndex
+                                , requestTimeout
+                        )
 
-                    if (results.size == maxSuccessfulHosts) {
-                        rootJob.cancelAndJoin()
-                        return@async
-                    }
+                        // A page should always have some results.
+                        if (pagedResult.itemCount > 0
+                                // Guard heuristic, we know the last page index should be greater than
+                                // or equal to the requested page index. The proxy doesn't have the page
+                                // if this check fails.
+                                && pagedResult.lastPageIndex >= pageIndex) {
+                            results.add(pagedResult)
+                        }
 
-                    if (pagedResult.itemCount > 0 && pagedResult.lastPageIndex >= pageIndex) {
-                        results.add(pagedResult)
+                        if (results.size == maxSuccessfulHosts) {
+                            rootJob.cancelAndJoin()
+                            return@async
+                        }
                     }
-                }
-            }.awaitAll()
+                }.awaitAll()
+            }
+        } catch (ex: TimeoutCancellationException) {
+            Log.w(Tag, "Query timed out, successful queries: ${results.size}")
+        } catch (ignored: JobCancellationException) {
+            // Ignored
         } catch (ex: Exception) {
-            Log.w(Tag, "Try to prevent this error: ${ex.message}")
+            Log.w(Tag, "Unexpected exception", ex)
         }
 
         return results
@@ -86,21 +98,22 @@ class QueryService constructor(
         val results: ArrayList<PagedResult> = ArrayList()
 
         try {
-            // Timeout so we don't hang, use the results gathered so far.
-            withTimeout(queryTimeout, TimeUnit.MILLISECONDS) {
-                results.addAll(producePagedResults(
-                        queryFactories
-                        , query
-                        , pageIndex
-                        , Math.min(queryFactories.size, maxSuccessfulHosts)
-                        , requestTimeout
-                ))
-            }
-        } catch (ex: TimeoutCancellationException) {
-            Log.w(Tag, "Query timed out, successful queries: ${results.size}")
+            results.addAll(producePagedResults(
+                    queryFactories = queryFactories
+                    , query = query
+                    , pageIndex = pageIndex
+                    , maxSuccessfulHosts = Math.min(queryFactories.size, maxSuccessfulHosts)
+                    , queryTimeout = queryTimeout
+                    , requestTimeout = requestTimeout
+            ))
         } catch (ex: Exception) {
-            Log.e(Tag, "Unknown error occurred (page index = $pageIndex): ${ex.message}")
+            Log.e(Tag, "Unknown error occurred: ${ex.message}")
         } finally {
+
+            if (results.size == 0) {
+                val x = 1
+            }
+
             return results.flatten(pageIndex)
         }
     }
@@ -138,16 +151,29 @@ class QueryService constructor(
         )
     }
 
-    private fun Element.tryParseLastPageIndex(): Int = try {
-        val pageCount = Integer.parseInt(select(PageSelectPath)
-                ?.dropLast(1)
-                ?.last()
-                ?.text() ?: "0"
-        )
+    private fun Element.tryParseLastPageIndex(): Int {
+        try {
+            val pageLinks = select(PageSelectPath)
 
-        Math.max(pageCount - 1, 0)
-    } catch (ex: Exception) {
-        0
+            val imageLink = pageLinks.last().select("img").firstOrNull()
+
+            if (imageLink == null) {
+                val last = pageLinks.lastOrNull()?.text() ?: "0"
+                val pageCount = Integer.parseInt(last) + 1
+
+                return Math.max(pageCount - 1, 0)
+            }
+
+            val pageCount = Integer.parseInt(pageLinks
+                    ?.dropLast(1)
+                    ?.last()
+                    ?.text() ?: "0"
+            )
+
+            return Math.max(pageCount - 1, 0)
+        } catch (ex: Exception) {
+            return 0
+        }
     }
 
     private fun Element.tryParseSearchResultItem(): SearchResultItem? {
