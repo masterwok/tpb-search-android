@@ -13,6 +13,6 @@ data class PagedResult(
     val itemCount = items.size
 
     override fun toString(): String = "Page Index: $pageIndex" +
-            ", Last Page Index: $lastPageIndex" +
-            ", Item Count: ${items.size}"
+            ", Item Count: ${items.size}" +
+            ", Last Page Index: $lastPageIndex"
 }

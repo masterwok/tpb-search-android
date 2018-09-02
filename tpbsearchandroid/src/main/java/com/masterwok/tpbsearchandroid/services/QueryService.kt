@@ -4,11 +4,7 @@ import android.util.Log
 import com.masterwok.tpbsearchandroid.contracts.QueryService
 import com.masterwok.tpbsearchandroid.models.PagedResult
 import com.masterwok.tpbsearchandroid.models.SearchResultItem
-import kotlinx.coroutines.experimental.JobCancellationException
-import kotlinx.coroutines.experimental.TimeoutCancellationException
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.channels.produce
-import kotlinx.coroutines.experimental.withTimeout
+import kotlinx.coroutines.experimental.*
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
@@ -43,21 +39,41 @@ class QueryService constructor(
             , items = flatMap { it.items }.distinctBy { it.infoHash }
     )
 
-    private fun producePagedResults(
+    private suspend fun producePagedResults(
             queryFactories: List<(query: String, pageIndex: Int) -> String>
             , query: String
             , pageIndex: Int
+            , maxSuccessfulHosts: Int
             , requestTimeout: Long
-    ) = produce {
-        queryFactories
-                .map { async { queryHost(it, query, pageIndex, requestTimeout) } }
-                .forEach {
-                    val pagedResult = it.await()
+    ): ArrayList<PagedResult> {
+        val results = ArrayList<PagedResult>()
+        val rootJob = Job()
 
-                    if (pagedResult.itemCount > 0) {
-                        send(pagedResult)
+        try {
+            queryFactories.map {
+                async(parent = rootJob) {
+                    val pagedResult = queryHost(
+                            it
+                            , query
+                            , pageIndex
+                            , requestTimeout
+                    )
+
+                    if (results.size == maxSuccessfulHosts) {
+                        rootJob.cancelAndJoin()
+                        return@async
+                    }
+
+                    if (pagedResult.itemCount > 0 && pagedResult.lastPageIndex >= pageIndex) {
+                        results.add(pagedResult)
                     }
                 }
+            }.awaitAll()
+        } catch (ex: Exception) {
+            Log.w(Tag, "Try to prevent this error: ${ex.message}")
+        }
+
+        return results
     }
 
     override suspend fun query(
@@ -67,26 +83,24 @@ class QueryService constructor(
             , requestTimeout: Long
             , maxSuccessfulHosts: Int
     ): PagedResult {
-        val producer = producePagedResults(
-                queryFactories
-                , query
-                , pageIndex
-                , requestTimeout
-        )
-
-        val range = (1..Math.min(queryFactories.size, maxSuccessfulHosts))
         val results: ArrayList<PagedResult> = ArrayList()
 
         try {
             // Timeout so we don't hang, use the results gathered so far.
             withTimeout(queryTimeout, TimeUnit.MILLISECONDS) {
-                range.forEach { results.add(producer.receive()) }
+                results.addAll(producePagedResults(
+                        queryFactories
+                        , query
+                        , pageIndex
+                        , Math.min(queryFactories.size, maxSuccessfulHosts)
+                        , requestTimeout
+                ))
             }
         } catch (ex: TimeoutCancellationException) {
             Log.w(Tag, "Query timed out, successful queries: ${results.size}")
+        } catch (ex: Exception) {
+            Log.e(Tag, "Unknown error occurred (page index = $pageIndex): ${ex.message}")
         } finally {
-            producer.cancel()
-
             return results.flatten(pageIndex)
         }
     }
