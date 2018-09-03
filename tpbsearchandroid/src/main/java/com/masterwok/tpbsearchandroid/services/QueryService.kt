@@ -8,6 +8,7 @@ import kotlinx.coroutines.experimental.*
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
+import java.util.*
 import java.util.concurrent.TimeUnit
 
 class QueryService constructor(
@@ -23,9 +24,15 @@ class QueryService constructor(
         private const val SeedersSelectPath = "td:nth-child(3)"
         private const val LeechersSelectPath = "td:nth-child(4)"
         private const val PageSelectPath = "body > div:nth-child(6) > a"
+        private const val InfoSelector = "td:nth-child(2) > font"
 
+        private val InfoRegex = Regex("""Uploaded\s*([\d\W]*),\s*Size\s*(.*),""")
         private val InfoHashRegex = Regex("btih:(.*)&dn")
     }
+
+    private fun getCurrentYear() = Calendar
+            .getInstance()
+            .get(Calendar.YEAR)
 
     private fun makeRequest(url: String) = async<Document> {
         Jsoup.connect(url).get()
@@ -33,11 +40,13 @@ class QueryService constructor(
 
     private fun List<PagedResult>.flatten(
             pageIndex: Int
-    ): PagedResult = PagedResult(
-            pageIndex = pageIndex
-            , lastPageIndex = maxBy { it.lastPageIndex }?.lastPageIndex ?: 0
-            , items = flatMap { it.items }.distinctBy { it.infoHash }
-    )
+    ): PagedResult {
+        return PagedResult(
+                pageIndex = pageIndex
+                , lastPageIndex = maxBy { it.lastPageIndex }?.lastPageIndex ?: 0
+                , items = flatMap { it.items }.distinctBy { it.infoHash }
+        )
+    }
 
     private suspend fun producePagedResults(
             queryFactories: List<(query: String, pageIndex: Int) -> String>
@@ -134,7 +143,7 @@ class QueryService constructor(
             Log.w(Tag, "Request failed: $requestUrl")
         }
 
-        return PagedResult(
+        val result = PagedResult(
                 pageIndex = pageIndex
                 , lastPageIndex = response?.tryParseLastPageIndex() ?: 0
                 , items = response?.select(SearchResultPath)
@@ -144,6 +153,12 @@ class QueryService constructor(
                 ?.toList()
                 ?: ArrayList()
         )
+
+        if (result.items.firstOrNull()?.displayUploadedOn == "") {
+            val x = 1
+        }
+
+        return result
     }
 
     private fun Element.tryParseLastPageIndex(): Int {
@@ -171,6 +186,31 @@ class QueryService constructor(
         }
     }
 
+    private fun Element.getInfoTextMatch(): MatchResult? {
+        val infoText = select(InfoSelector)
+                ?.text()
+
+        return InfoRegex.find(infoText ?: "")
+    }
+
+    private fun getUploadedOn(infoTextMatch: MatchResult?): String {
+        val text = infoTextMatch
+                ?.groupValues
+                ?.get(1)
+                ?: ""
+
+        return if (text.contains(':')) {
+            "${text.substringBefore(' ')}-${getCurrentYear()}"
+        } else {
+            (text).replace("""[\s]""".toRegex(), "-")
+        }
+    }
+
+    private fun getSize(infoTextMatch: MatchResult?): String = infoTextMatch
+            ?.groupValues
+            ?.get(2)
+            ?: ""
+
     private fun Element.tryParseSearchResultItem(): SearchResultItem? {
         try {
             val magnet = select(MagnetSelectPath)
@@ -178,16 +218,33 @@ class QueryService constructor(
                     ?.attr("href")
                     ?: ""
 
+            val infoTextMatch = getInfoTextMatch()
+
+            val title = select(TitleSelectPath)
+                    ?.first()
+                    ?.text()
+                    ?: ""
+
+            val seedersText = select(SeedersSelectPath)
+                    ?.first()
+                    ?.text()
+                    ?: "0"
+
+            val leechersText = select(LeechersSelectPath)
+                    ?.first()
+                    ?.text()
+                    ?: "0"
+
             return SearchResultItem(
-                    title = select(TitleSelectPath)?.first()?.text() ?: ""
+                    title = title
                     , magnet = magnet
                     , infoHash = getInfoHash(magnet)
-                    , seeders = Integer.parseInt(select(SeedersSelectPath)?.first()?.text() ?: "0")
-                    , leechers = Integer.parseInt(select(LeechersSelectPath)?.first()?.text()
-                    ?: "0")
+                    , seeders = Integer.parseInt(seedersText)
+                    , leechers = Integer.parseInt(leechersText)
+                    , displayUploadedOn = getUploadedOn(infoTextMatch)
+                    , displaySize = getSize(infoTextMatch)
 
             )
-
         } catch (ex: Exception) {
             return null
         }

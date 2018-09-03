@@ -10,6 +10,8 @@ data class SearchResultItem(
         , val infoHash: String
         , val seeders: Int
         , val leechers: Int
+        , val displayUploadedOn: String
+        , val displaySize: String
 ) {
     override fun toString(): String {
         return "title: $title" +
