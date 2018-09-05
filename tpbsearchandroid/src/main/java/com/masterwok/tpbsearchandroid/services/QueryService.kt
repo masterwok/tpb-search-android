@@ -3,6 +3,7 @@ package com.masterwok.tpbsearchandroid.services
 import android.util.Log
 import com.masterwok.tpbsearchandroid.contracts.QueryService
 import com.masterwok.tpbsearchandroid.extensions.getQueryResult
+import com.masterwok.tpbsearchandroid.extensions.isValidResult
 import com.masterwok.tpbsearchandroid.models.QueryResult
 import com.masterwok.tpbsearchandroid.models.TorrentResult
 import kotlinx.coroutines.experimental.*
@@ -19,6 +20,14 @@ class QueryService constructor(
         private const val Tag = "QueryService"
     }
 
+
+    // Possible response states:
+    // 1. Response was successful -> SUCCESS
+    // 2. All responses timed out -> TIMEOUT
+    // 3. Invalid page error      -> INVALID
+    // 4. Exception               -> ERROR
+
+
     override suspend fun query(
             query: String
             , pageIndex: Int
@@ -26,30 +35,70 @@ class QueryService constructor(
             , requestTimeout: Long
             , maxSuccessfulHosts: Int
     ): QueryResult<TorrentResult> {
-        val results: ArrayList<QueryResult<TorrentResult>> = ArrayList()
+        var results: ArrayList<QueryResult<TorrentResult>> = ArrayList()
 
         try {
-            results.addAll(queryAllHosts(
+            results = queryAllHosts(
                     queryFactories = queryFactories
                     , query = query
                     , pageIndex = pageIndex
                     , maxSuccessfulHosts = Math.min(queryFactories.size, maxSuccessfulHosts)
                     , queryTimeout = queryTimeout
                     , requestTimeout = requestTimeout
-            ))
+            )
         } catch (ex: Exception) {
             Log.e(Tag, "Unknown error occurred: ${ex.message}")
-        } finally {
-            return results.flatten(pageIndex)
+            return QueryResult(state = QueryResult.State.ERROR)
         }
+
+        return results.flatten(pageIndex)
     }
 
     private fun List<QueryResult<TorrentResult>>.flatten(
             pageIndex: Int
     ): QueryResult<TorrentResult> {
-        val items = flatMap { it.items }.distinctBy { it.infoHash }
+        if(isEmpty()) {
+            val x = 1
+        }
 
-        val lastPageIndex = this.maxBy { it.lastPageIndex }
+        val allResultsInTimeoutState = all { it.state == QueryResult.State.TIMEOUT }
+        val allResultsInInvalidState = all { it.state == QueryResult.State.INVALID }
+        val allResultsInErrorState = all { it.state == QueryResult.State.ERROR }
+
+        // Invalid state returned (probably bad page, consider skipping page on retry)
+        if (allResultsInInvalidState) {
+            return QueryResult(
+                    state = QueryResult.State.INVALID
+                    , pageIndex = pageIndex
+                    , lastPageIndex = 0
+            )
+        }
+
+        if (allResultsInTimeoutState) {
+            return QueryResult(
+                    state = QueryResult.State.TIMEOUT
+                    , pageIndex = pageIndex
+                    , lastPageIndex = 0
+            )
+        }
+
+        if (allResultsInErrorState) {
+            return QueryResult(
+                    state = QueryResult.State.ERROR
+                    , pageIndex = pageIndex
+                    , lastPageIndex = 0
+            )
+        }
+
+        // There were 1 or more successful results, flatten and return them.
+        val successfulResults = filter { it.isSuccessful() }
+
+        val items = successfulResults
+                .flatMap { it.items }
+                .distinctBy { it.infoHash }
+
+        val lastPageIndex = successfulResults
+                .maxBy { it.lastPageIndex }
                 ?.lastPageIndex
                 ?: 0
 
@@ -74,9 +123,7 @@ class QueryService constructor(
         val requestUrl = queryFactory(query, pageIndex)
         var response: Document? = null
 
-        val tmpResult = QueryResult<TorrentResult>(
-                pageIndex = pageIndex
-        )
+        val unsuccessfulResult = QueryResult<TorrentResult>(pageIndex = pageIndex)
 
         try {
             withTimeout(requestTimeout, TimeUnit.MILLISECONDS) {
@@ -84,15 +131,31 @@ class QueryService constructor(
             }
         } catch (ex: TimeoutCancellationException) {
             Log.w(Tag, "Request timeout: $requestUrl")
-            return tmpResult.apply { state = QueryResult.State.TIMEOUT }
+            return unsuccessfulResult.apply { state = QueryResult.State.TIMEOUT }
         } catch (ex: JobCancellationException) {
             // Ignored..
         } catch (ex: Exception) {
             Log.w(Tag, "Request failed: $requestUrl")
-            return tmpResult.apply { state = QueryResult.State.ERROR }
+            return unsuccessfulResult.apply { state = QueryResult.State.ERROR }
         }
 
-        return response.getQueryResult(pageIndex)
+        if (!response.isValidResult()) {
+            return unsuccessfulResult.apply { state = QueryResult.State.INVALID }
+        }
+
+        return try {
+            val queryResult = response.getQueryResult(pageIndex)
+
+            // Item had items, consider successful
+            return if (queryResult.getItemCount() > 0) {
+                queryResult.apply { state = QueryResult.State.SUCCESS }
+            } else {
+                unsuccessfulResult.apply { state = QueryResult.State.INVALID }
+            }
+        } catch (ex: Exception) {
+            Log.e(Tag, "Failed parsing result", ex)
+            unsuccessfulResult.apply { state = QueryResult.State.ERROR }
+        }
     }
 
     private suspend fun queryAllHosts(
@@ -108,23 +171,24 @@ class QueryService constructor(
 
         try {
             withTimeout(queryTimeout, TimeUnit.MILLISECONDS) {
-                queryFactories.map {
+                queryFactories.map { queryFactory ->
                     async(parent = rootJob) {
-                        val pagedResult = queryHost(
-                                it
+                        results.add(queryHost(
+                                queryFactory
                                 , query
                                 , pageIndex
                                 , requestTimeout
-                        )
+                        ))
 
-                        if (pagedResult.state == QueryResult.State.SUCCESS) {
-                            results.add(pagedResult)
+                        if(results.isNotEmpty()) {
+                            val successfulResultCount = results.count { it.isSuccessful() }
+
+                            if (successfulResultCount == maxSuccessfulHosts) {
+                                rootJob.cancelAndJoin()
+                                return@async
+                            }
                         }
 
-                        if (results.size == maxSuccessfulHosts) {
-                            rootJob.cancelAndJoin()
-                            return@async
-                        }
                     }
                 }.awaitAll()
             }

@@ -16,6 +16,12 @@ private const val InfoSelector = "td:nth-child(2) > font"
 private val InfoRegex = Regex("""Uploaded\s*([\d\W]*),\s*Size\s*(.*),""")
 private val InfoHashRegex = Regex("btih:(.*)&dn")
 
+
+internal fun Element?.isValidResult(): Boolean = this
+        ?.select(SearchResultPath)
+        ?.isNotEmpty() == true
+
+
 internal fun Element?.getQueryResult(pageIndex: Int): QueryResult<TorrentResult> {
     val items = this?.select(SearchResultPath)
             ?.mapNotNull { it.tryParseSearchResultItem() }
