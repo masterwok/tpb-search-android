@@ -1,6 +1,7 @@
 package com.masterwok.tpbsearchandroid.contracts
 
-import com.masterwok.tpbsearchandroid.models.PagedResult
+import com.masterwok.tpbsearchandroid.models.QueryResult
+import com.masterwok.tpbsearchandroid.models.TorrentResult
 
 const val DefaultRequestTimeout = 5000L
 const val DefaultQueryTimeout = 10000L
@@ -23,6 +24,6 @@ interface QueryService {
             , queryTimeout: Long = DefaultQueryTimeout
             , requestTimeout: Long = DefaultRequestTimeout
             , maxSuccessfulHosts: Int = DefaultMaxSuccessfulHosts
-    ): PagedResult
+    ): QueryResult<TorrentResult>
 
 }

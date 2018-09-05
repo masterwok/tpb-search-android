@@ -1,6 +1,6 @@
 package com.masterwok.tpbsearchandroid.extensions
 
-import com.masterwok.tpbsearchandroid.models.PagedResult
+import com.masterwok.tpbsearchandroid.models.QueryResult
 import com.masterwok.tpbsearchandroid.models.TorrentResult
 import org.jsoup.nodes.Element
 import java.util.*
@@ -16,7 +16,7 @@ private const val InfoSelector = "td:nth-child(2) > font"
 private val InfoRegex = Regex("""Uploaded\s*([\d\W]*),\s*Size\s*(.*),""")
 private val InfoHashRegex = Regex("btih:(.*)&dn")
 
-internal fun Element?.getPagedResult(pageIndex: Int): PagedResult<TorrentResult> {
+internal fun Element?.getQueryResult(pageIndex: Int): QueryResult<TorrentResult> {
     val items = this?.select(SearchResultPath)
             ?.mapNotNull { it.tryParseSearchResultItem() }
             ?.sortedByDescending { it.seeders }
@@ -24,7 +24,7 @@ internal fun Element?.getPagedResult(pageIndex: Int): PagedResult<TorrentResult>
             ?.toList()
             ?: ArrayList()
 
-    return PagedResult(
+    return QueryResult(
             pageIndex = pageIndex
             , lastPageIndex = this?.tryParseLastPageIndex() ?: 0
             , items = items
@@ -37,8 +37,8 @@ private fun Element.tryParseLastPageIndex(): Int {
 
     val imageLink = pageLinks
             .last()
-            .select("img")
-            .firstOrNull()
+            ?.select("img")
+            ?.firstOrNull()
 
     // Doesn't have arrow/next image link (last page).
     if (imageLink == null) {

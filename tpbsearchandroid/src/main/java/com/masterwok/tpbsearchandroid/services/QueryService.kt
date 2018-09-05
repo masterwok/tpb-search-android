@@ -2,8 +2,8 @@ package com.masterwok.tpbsearchandroid.services
 
 import android.util.Log
 import com.masterwok.tpbsearchandroid.contracts.QueryService
-import com.masterwok.tpbsearchandroid.extensions.getPagedResult
-import com.masterwok.tpbsearchandroid.models.PagedResult
+import com.masterwok.tpbsearchandroid.extensions.getQueryResult
+import com.masterwok.tpbsearchandroid.models.QueryResult
 import com.masterwok.tpbsearchandroid.models.TorrentResult
 import kotlinx.coroutines.experimental.*
 import org.jsoup.Jsoup
@@ -25,8 +25,8 @@ class QueryService constructor(
             , queryTimeout: Long
             , requestTimeout: Long
             , maxSuccessfulHosts: Int
-    ): PagedResult<TorrentResult> {
-        val results: ArrayList<PagedResult<TorrentResult>> = ArrayList()
+    ): QueryResult<TorrentResult> {
+        val results: ArrayList<QueryResult<TorrentResult>> = ArrayList()
 
         try {
             results.addAll(queryAllHosts(
@@ -44,13 +44,22 @@ class QueryService constructor(
         }
     }
 
-    private fun List<PagedResult<TorrentResult>>.flatten(
+    private fun List<QueryResult<TorrentResult>>.flatten(
             pageIndex: Int
-    ): PagedResult<TorrentResult> = PagedResult(
-            pageIndex = pageIndex
-            , lastPageIndex = maxBy { it.lastPageIndex }?.lastPageIndex ?: 0
-            , items = flatMap { it.items }.distinctBy { it.infoHash }
-    )
+    ): QueryResult<TorrentResult> {
+        val items = flatMap { it.items }.distinctBy { it.infoHash }
+
+        val lastPageIndex = this.maxBy { it.lastPageIndex }
+                ?.lastPageIndex
+                ?: 0
+
+        return QueryResult(
+                state = QueryResult.State.SUCCESS
+                , pageIndex = pageIndex
+                , lastPageIndex = lastPageIndex
+                , items = items
+        )
+    }
 
     private fun makeRequest(url: String) = async<Document> {
         Jsoup.connect(url).get()
@@ -61,9 +70,13 @@ class QueryService constructor(
             , query: String
             , pageIndex: Int
             , requestTimeout: Long
-    ): PagedResult<TorrentResult> {
+    ): QueryResult<TorrentResult> {
         val requestUrl = queryFactory(query, pageIndex)
         var response: Document? = null
+
+        val tmpResult = QueryResult<TorrentResult>(
+                pageIndex = pageIndex
+        )
 
         try {
             withTimeout(requestTimeout, TimeUnit.MILLISECONDS) {
@@ -71,13 +84,15 @@ class QueryService constructor(
             }
         } catch (ex: TimeoutCancellationException) {
             Log.w(Tag, "Request timeout: $requestUrl")
+            return tmpResult.apply { state = QueryResult.State.TIMEOUT }
         } catch (ex: JobCancellationException) {
             // Ignored..
         } catch (ex: Exception) {
             Log.w(Tag, "Request failed: $requestUrl")
+            return tmpResult.apply { state = QueryResult.State.ERROR }
         }
 
-        return response.getPagedResult(pageIndex)
+        return response.getQueryResult(pageIndex)
     }
 
     private suspend fun queryAllHosts(
@@ -87,8 +102,8 @@ class QueryService constructor(
             , maxSuccessfulHosts: Int
             , queryTimeout: Long
             , requestTimeout: Long
-    ): ArrayList<PagedResult<TorrentResult>> {
-        val results = ArrayList<PagedResult<TorrentResult>>()
+    ): ArrayList<QueryResult<TorrentResult>> {
+        val results = ArrayList<QueryResult<TorrentResult>>()
         val rootJob = Job()
 
         try {
@@ -102,12 +117,7 @@ class QueryService constructor(
                                 , requestTimeout
                         )
 
-                        // A page should always have some results.
-                        if (pagedResult.itemCount > 0
-                                // Guard heuristic, we know the last page index should be greater than
-                                // or equal to the requested page index. The proxy doesn't have the page
-                                // if this check fails.
-                                && pagedResult.lastPageIndex >= pageIndex) {
+                        if (pagedResult.state == QueryResult.State.SUCCESS) {
                             results.add(pagedResult)
                         }
 
