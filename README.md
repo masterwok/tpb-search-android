@@ -43,3 +43,7 @@ dependencies {
     implementation 'com.github.masterwok:tpb-search-android:0.0.1'
 }
 ```
+
+## Demo Screenshot
+
+<img src="/sample/screenshots/search_screenshot.jpg?raw=true" height="600" title="Demo Search">
