@@ -22,12 +22,6 @@ class SearchFragment : Fragment() {
     // In real world app, this would be injected.
     private val viewModel: SearchViewModel = SearchViewModel()
 
-    companion object {
-        fun createInstance(): SearchFragment {
-            return SearchFragment()
-        }
-    }
-
     private lateinit var searchAdapter: SearchPagedListAdapter
 
     override fun onAttach(context: Context?) {

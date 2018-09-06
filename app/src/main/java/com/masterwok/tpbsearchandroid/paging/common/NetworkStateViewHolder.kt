@@ -8,6 +8,9 @@ import com.masterwok.tpbsearchandroid.R
 import kotlinx.android.synthetic.main.item_network_state.view.*
 
 
+/**
+ * This view holder represents [NetworkState] in a [RecyclerView].
+ */
 class NetworkStateViewHolder(
         itemView: View
         , private val retryCallback: () -> Unit
