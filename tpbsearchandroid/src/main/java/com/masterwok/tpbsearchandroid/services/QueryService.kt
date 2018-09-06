@@ -28,25 +28,22 @@ class QueryService constructor(
             , requestTimeout: Long
             , maxSuccessfulHosts: Int
     ): QueryResult<TorrentResult> {
-        val results: ArrayList<QueryResult<TorrentResult>>
-
         try {
-            results = queryAllHosts(
+            return queryAllHosts(
                     queryFactories = queryFactories
                     , query = query
                     , pageIndex = pageIndex
                     , maxSuccessfulHosts = Math.min(queryFactories.size, maxSuccessfulHosts)
                     , queryTimeout = queryTimeout
                     , requestTimeout = requestTimeout
-            )
+            ).flatten(pageIndex)
         } catch (ex: Exception) {
             if (verboseLogging) {
                 Log.e(Tag, "Unknown error occurred: ${ex.message}")
             }
+
             return QueryResult(state = QueryResult.State.ERROR)
         }
-
-        return results.flatten(pageIndex)
     }
 
     private fun List<QueryResult<TorrentResult>>.flatten(
