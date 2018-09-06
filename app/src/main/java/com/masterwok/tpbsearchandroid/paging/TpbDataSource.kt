@@ -14,7 +14,7 @@ import kotlinx.coroutines.experimental.runBlocking
 import kotlinx.coroutines.experimental.sync.Mutex
 import kotlinx.coroutines.experimental.sync.withLock
 
-class ThePirateBayDataSource constructor(
+class TpbDataSource constructor(
         private val queryService: QueryService
         , private val rootJob: Job
         , private val query: String?

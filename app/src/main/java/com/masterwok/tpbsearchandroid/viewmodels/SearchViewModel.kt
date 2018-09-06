@@ -8,8 +8,8 @@ import android.arch.paging.PagedList
 import com.masterwok.tpbsearchandroid.constants.QueryFactories
 import com.masterwok.tpbsearchandroid.contracts.QueryService
 import com.masterwok.tpbsearchandroid.models.TorrentResult
-import com.masterwok.tpbsearchandroid.paging.SearchResultDataFactory
-import com.masterwok.tpbsearchandroid.paging.ThePirateBayDataSource
+import com.masterwok.tpbsearchandroid.paging.TpbDataFactory
+import com.masterwok.tpbsearchandroid.paging.TpbDataSource
 import com.masterwok.tpbsearchandroid.paging.common.NetworkState
 import kotlinx.coroutines.experimental.Job
 import java.util.concurrent.Executors
@@ -28,7 +28,7 @@ class SearchViewModel : ViewModel() {
 
     private val executor = Executors.newFixedThreadPool(5)
 
-    private val searchDataFactory = SearchResultDataFactory(
+    private val searchDataFactory = TpbDataFactory(
             queryService
             , rootJob
     )
@@ -46,7 +46,7 @@ class SearchViewModel : ViewModel() {
 
     private val networkState = Transformations.switchMap(
             searchDataFactory.getMutableLiveData()
-    ) { dataSource: ThePirateBayDataSource? -> dataSource?.networkState }
+    ) { dataSource: TpbDataSource? -> dataSource?.networkState }
 
     private fun invalidate() = searchDataFactory
             .getMutableLiveData()

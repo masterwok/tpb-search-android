@@ -9,11 +9,14 @@ import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.masterwok.tpbsearchandroid.R
 import com.masterwok.tpbsearchandroid.extensions.disableInitialInsertScroll
 import com.masterwok.tpbsearchandroid.extensions.dismissKeyboard
 import com.masterwok.tpbsearchandroid.extensions.getCompatColor
-import com.masterwok.tpbsearchandroid.R
-import com.masterwok.tpbsearchandroid.paging.SearchPagedListAdapter
+import com.masterwok.tpbsearchandroid.models.TorrentResult
+import com.masterwok.tpbsearchandroid.paging.TpbItemViewHolder
+import com.masterwok.tpbsearchandroid.paging.TorrentResultDiffCallback
+import com.masterwok.tpbsearchandroid.paging.common.NetworkPagedListAdapter
 import com.masterwok.tpbsearchandroid.viewmodels.SearchViewModel
 import kotlinx.android.synthetic.main.fragment_search.*
 
@@ -22,14 +25,16 @@ class SearchFragment : Fragment() {
     // In real world app, this would be injected.
     private val viewModel: SearchViewModel = SearchViewModel()
 
-    private lateinit var searchAdapter: SearchPagedListAdapter
+    private lateinit var searchAdapter: NetworkPagedListAdapter<TorrentResult>
 
     override fun onAttach(context: Context?) {
         super.onAttach(context)
 
-        searchAdapter = SearchPagedListAdapter {
-            viewModel.retry()
-        }
+        searchAdapter = NetworkPagedListAdapter(
+                TorrentResultDiffCallback
+                , { viewModel.retry() }
+                , { parent -> TpbItemViewHolder.create(parent) }
+        )
 
         viewModel.getSearchResultLiveData().observe(this, Observer {
             swipeRefreshLayoutSearch.isRefreshing = false

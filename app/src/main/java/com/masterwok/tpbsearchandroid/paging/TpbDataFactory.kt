@@ -6,17 +6,17 @@ import com.masterwok.tpbsearchandroid.contracts.QueryService
 import com.masterwok.tpbsearchandroid.models.TorrentResult
 import kotlinx.coroutines.experimental.Job
 
-class SearchResultDataFactory constructor(
+class TpbDataFactory constructor(
         private val queryService: QueryService
         , private val rootJob: Job
 ) : DataSource.Factory<Long, TorrentResult>() {
 
-    private val searchLiveData = MutableLiveData<ThePirateBayDataSource>()
+    private val searchLiveData = MutableLiveData<TpbDataSource>()
 
     private var query: String? = null
 
     override fun create(): DataSource<Long, TorrentResult> {
-        val dataSource = ThePirateBayDataSource(
+        val dataSource = TpbDataSource(
                 queryService
                 , rootJob
                 , query
