@@ -46,4 +46,4 @@ dependencies {
 
 ## Demo Screenshot
 
-<img src="/sample/screenshots/search_screenshot.jpg?raw=true" height="600" title="Demo Search">
+<img src="/app/screenshots/search_screenshot.jpg?raw=true" height="600" title="Demo Search">
