@@ -3,10 +3,10 @@ package com.masterwok.tpbsearchandroid.paging.search
 import android.arch.lifecycle.MutableLiveData
 import android.arch.paging.PageKeyedDataSource
 import android.util.Log
-import com.masterwok.tpbsearchandroid.paging.common.NetworkState
 import com.masterwok.tpbsearchandroid.contracts.QueryService
 import com.masterwok.tpbsearchandroid.models.QueryResult
 import com.masterwok.tpbsearchandroid.models.TorrentResult
+import com.masterwok.tpbsearchandroid.paging.common.NetworkState
 import kotlinx.coroutines.experimental.CoroutineStart
 import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.launch
@@ -18,8 +18,8 @@ class TpbDataSource constructor(
         private val queryService: QueryService
         , private val rootJob: Job
         , private val query: String?
+        , private val verboseLogging: Boolean = false
 ) : PageKeyedDataSource<Long, TorrentResult>() {
-
 
     companion object {
         private const val Tag = "TpbDataSource"
@@ -91,13 +91,17 @@ class TpbDataSource constructor(
                 val endIndex = itemOffset + requestedLoadSize
                 val isLastPage = pageIndex == lastPageIndex
 
-                Log.d(Tag, "page: $pageIndex/$lastPageIndex")
+                if (verboseLogging) {
+                    Log.d(Tag, "page: $pageIndex/$lastPageIndex")
+                }
 
                 // Already have items in requested range
                 if (endIndex <= searchResults.size - 1) {
                     networkState.postValue(NetworkState.LOADED)
 
-                    Log.d(Tag, "Already had range, page: $pageIndex/$lastPageIndex")
+                    if (verboseLogging) {
+                        Log.d(Tag, "Already had range, page: $pageIndex/$lastPageIndex")
+                    }
 
                     callback.onResult(
                             getItemRange(itemOffset, endIndex)
@@ -109,7 +113,9 @@ class TpbDataSource constructor(
 
                 val queryResult = queryService.query(query, pageIndex, QueryTimeout)
 
-                Log.d(Tag, queryResult.toString())
+                if (verboseLogging) {
+                    Log.d(Tag, queryResult.toString())
+                }
 
                 if (queryResult.isSuccessful()) {
                     networkState.postValue(NetworkState.LOADED)

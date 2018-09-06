@@ -9,6 +9,7 @@ import kotlinx.coroutines.experimental.Job
 class TpbDataFactory constructor(
         private val queryService: QueryService
         , private val rootJob: Job
+        , private val verboseLogging: Boolean = false
 ) : DataSource.Factory<Long, TorrentResult>() {
 
     private val searchLiveData = MutableLiveData<TpbDataSource>()
@@ -20,6 +21,7 @@ class TpbDataFactory constructor(
                 queryService
                 , rootJob
                 , query
+                , verboseLogging
         )
 
         searchLiveData.postValue(dataSource)
