@@ -22,7 +22,10 @@ class SearchViewModel : ViewModel() {
             .masterwok
             .tpbsearchandroid
             .services
-            .QueryService(QueryFactories)
+            .QueryService(
+                    QueryFactories
+                    , verboseLogging = true
+            )
 
     private val rootJob = Job()
 

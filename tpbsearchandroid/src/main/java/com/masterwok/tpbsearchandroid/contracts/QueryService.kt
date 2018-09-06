@@ -7,6 +7,10 @@ const val DefaultRequestTimeout = 5000L
 const val DefaultQueryTimeout = 10000L
 const val DefaultMaxSuccessfulHosts = 5
 
+
+/**
+ * Contract that provides simple interface for querying The Pirate Bay.
+ */
 interface QueryService {
 
     /**

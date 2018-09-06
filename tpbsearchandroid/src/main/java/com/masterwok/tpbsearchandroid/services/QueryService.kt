@@ -14,6 +14,7 @@ import java.util.concurrent.TimeUnit
 
 class QueryService constructor(
         private val queryFactories: List<(query: String, pageIndex: Int) -> String>
+        , private val verboseLogging: Boolean = false
 ) : QueryService {
 
     companion object {
@@ -27,7 +28,7 @@ class QueryService constructor(
             , requestTimeout: Long
             , maxSuccessfulHosts: Int
     ): QueryResult<TorrentResult> {
-        var results: ArrayList<QueryResult<TorrentResult>> = ArrayList()
+        val results: ArrayList<QueryResult<TorrentResult>>
 
         try {
             results = queryAllHosts(
@@ -39,7 +40,9 @@ class QueryService constructor(
                     , requestTimeout = requestTimeout
             )
         } catch (ex: Exception) {
-            Log.e(Tag, "Unknown error occurred: ${ex.message}")
+            if (verboseLogging) {
+                Log.e(Tag, "Unknown error occurred: ${ex.message}")
+            }
             return QueryResult(state = QueryResult.State.ERROR)
         }
 
@@ -118,12 +121,16 @@ class QueryService constructor(
                 response = makeRequest(requestUrl).await()
             }
         } catch (ex: TimeoutCancellationException) {
-            Log.w(Tag, "Request timeout: $requestUrl")
+            if (verboseLogging) {
+                Log.w(Tag, "Request timeout: $requestUrl")
+            }
             return unsuccessfulResult.apply { state = QueryResult.State.TIMEOUT }
         } catch (ex: JobCancellationException) {
             // Ignored..
         } catch (ex: Exception) {
-            Log.w(Tag, "Request failed: $requestUrl")
+            if (verboseLogging) {
+                Log.w(Tag, "Request failed: $requestUrl")
+            }
             return unsuccessfulResult.apply { state = QueryResult.State.ERROR }
         }
 
@@ -141,7 +148,9 @@ class QueryService constructor(
                 unsuccessfulResult.apply { state = QueryResult.State.INVALID }
             }
         } catch (ex: Exception) {
-            Log.e(Tag, "Failed parsing result", ex)
+            if (verboseLogging) {
+                Log.e(Tag, "Failed parsing result", ex)
+            }
             unsuccessfulResult.apply { state = QueryResult.State.ERROR }
         }
     }
@@ -168,7 +177,7 @@ class QueryService constructor(
                                 , requestTimeout
                         ))
 
-                        if(results.isNotEmpty()) {
+                        if (results.isNotEmpty()) {
                             val successfulResultCount = results.count { it.isSuccessful() }
 
                             if (successfulResultCount == maxSuccessfulHosts) {
@@ -181,11 +190,15 @@ class QueryService constructor(
                 }.awaitAll()
             }
         } catch (ex: TimeoutCancellationException) {
-            Log.w(Tag, "Query timed out, successful queries: ${results.size}")
+            if (verboseLogging) {
+                Log.w(Tag, "Query timed out, successful queries: ${results.size}")
+            }
         } catch (ignored: JobCancellationException) {
             // Ignored
         } catch (ex: Exception) {
-            Log.w(Tag, "Unexpected exception", ex)
+            if (verboseLogging) {
+                Log.w(Tag, "Unexpected exception", ex)
+            }
         }
 
         return results
