@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/castDarkGray"
+        android:focusableInTouchMode="true"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/editTextSearch"
+            style="@style/SearchEditText"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="3"
+            android:layout_gravity="center_vertical"
+            android:foreground="?attr/selectableItemBackground"
+            android:paddingEnd="10dp"
+            android:paddingLeft="10dp"
+            android:paddingRight="10dp"
+            android:paddingStart="10dp"/>
+
+        <android.support.v7.widget.AppCompatImageButton
+            android:id="@+id/imageButtonSearch"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@color/castPurple"
+            android:foreground="?attr/selectableItemBackground"
+            android:src="@drawable/ic_search_black_24dp">
+        </android.support.v7.widget.AppCompatImageButton>
+    </LinearLayout>
+
+    <android.support.v4.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefreshLayoutSearch"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/searchRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingBottom="100dp"/>
+
+    </android.support.v4.widget.SwipeRefreshLayout>
+
+</LinearLayout>

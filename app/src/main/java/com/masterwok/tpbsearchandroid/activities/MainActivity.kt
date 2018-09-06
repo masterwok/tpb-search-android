@@ -1,8 +1,9 @@
-package com.masterwok.tpbsearchandroid
+package com.masterwok.tpbsearchandroid.activities
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import com.masterwok.tpbsearchandroid.R
 import com.masterwok.tpbsearchandroid.common.AndroidJob
 import com.masterwok.tpbsearchandroid.constants.QueryFactories
 import com.masterwok.tpbsearchandroid.contracts.DefaultMaxSuccessfulHosts

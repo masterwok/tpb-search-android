@@ -1,6 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#008577</color>
-    <color name="colorPrimaryDark">#00574B</color>
-    <color name="colorAccent">#D81B60</color>
+    <color name="colorPrimaryDark">#313A3B</color>
+    <color name="colorPrimary">#3F4B4C</color>
+    <color name="colorAccent">#5D5179</color>
+
+    <color name="castDarkGray">#4C5B5C</color>
+    <color name="castBlue">#3891A6</color>
+    <color name="castGreen">#94E495</color>
+    <color name="castTeal">#92c9b1</color>
+    <color name="castPurple">#5D5179</color>
+    <color name="castRed">#EF6F6C</color>
+    <color name="castYellow">#F5EE9E</color>
+
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <color name="vlc_toolbar_background_black">#CF000000</color>
+
+    <color name="stream_progress_bar">@color/castPurple</color>
+    <color name="stream_progress_bar_background">#7F000000</color>
+
+    <color name="background_stream_title">#7F000000</color>
 </resources>

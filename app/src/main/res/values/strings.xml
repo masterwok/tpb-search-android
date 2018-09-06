@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">TPB Search Android</string>
+    <string name="network_state_retry">RETRY</string>
 </resources>

@@ -57,10 +57,6 @@ class QueryService constructor(
     private fun List<QueryResult<TorrentResult>>.flatten(
             pageIndex: Int
     ): QueryResult<TorrentResult> {
-        if(isEmpty()) {
-            val x = 1
-        }
-
         val allResultsInTimeoutState = all { it.state == QueryResult.State.TIMEOUT }
         val allResultsInInvalidState = all { it.state == QueryResult.State.INVALID }
         val allResultsInErrorState = all { it.state == QueryResult.State.ERROR }
