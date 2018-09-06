@@ -8,8 +8,8 @@ import android.arch.paging.PagedList
 import com.masterwok.tpbsearchandroid.constants.QueryFactories
 import com.masterwok.tpbsearchandroid.contracts.QueryService
 import com.masterwok.tpbsearchandroid.models.TorrentResult
-import com.masterwok.tpbsearchandroid.paging.TpbDataFactory
-import com.masterwok.tpbsearchandroid.paging.TpbDataSource
+import com.masterwok.tpbsearchandroid.paging.search.TpbDataFactory
+import com.masterwok.tpbsearchandroid.paging.search.TpbDataSource
 import com.masterwok.tpbsearchandroid.paging.common.NetworkState
 import kotlinx.coroutines.experimental.Job
 import java.util.concurrent.Executors

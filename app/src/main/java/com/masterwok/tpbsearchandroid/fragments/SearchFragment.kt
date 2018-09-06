@@ -14,8 +14,8 @@ import com.masterwok.tpbsearchandroid.extensions.disableInitialInsertScroll
 import com.masterwok.tpbsearchandroid.extensions.dismissKeyboard
 import com.masterwok.tpbsearchandroid.extensions.getCompatColor
 import com.masterwok.tpbsearchandroid.models.TorrentResult
-import com.masterwok.tpbsearchandroid.paging.TpbItemViewHolder
-import com.masterwok.tpbsearchandroid.paging.TorrentResultDiffCallback
+import com.masterwok.tpbsearchandroid.paging.search.TpbItemViewHolder
+import com.masterwok.tpbsearchandroid.paging.search.TorrentResultDiffCallback
 import com.masterwok.tpbsearchandroid.paging.common.NetworkPagedListAdapter
 import com.masterwok.tpbsearchandroid.viewmodels.SearchViewModel
 import kotlinx.android.synthetic.main.fragment_search.*
