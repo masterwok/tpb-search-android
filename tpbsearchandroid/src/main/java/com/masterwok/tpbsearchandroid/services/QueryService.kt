@@ -20,14 +20,6 @@ class QueryService constructor(
         private const val Tag = "QueryService"
     }
 
-
-    // Possible response states:
-    // 1. Response was successful -> SUCCESS
-    // 2. All responses timed out -> TIMEOUT
-    // 3. Invalid page error      -> INVALID
-    // 4. Exception               -> ERROR
-
-
     override suspend fun query(
             query: String
             , pageIndex: Int
