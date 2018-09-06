@@ -36,7 +36,7 @@ class QueryService constructor(
                     , maxSuccessfulHosts = Math.min(queryFactories.size, maxSuccessfulHosts)
                     , queryTimeout = queryTimeout
                     , requestTimeout = requestTimeout
-            ).flatten(pageIndex)
+            )
         } catch (ex: Exception) {
             if (verboseLogging) {
                 Log.e(Tag, "Unknown error occurred: ${ex.message}")
@@ -159,7 +159,7 @@ class QueryService constructor(
             , maxSuccessfulHosts: Int
             , queryTimeout: Long
             , requestTimeout: Long
-    ): ArrayList<QueryResult<TorrentResult>> {
+    ): QueryResult<TorrentResult> {
         val results = ArrayList<QueryResult<TorrentResult>>()
         val rootJob = Job()
 
@@ -174,15 +174,12 @@ class QueryService constructor(
                                 , requestTimeout
                         ))
 
-                        if (results.isNotEmpty()) {
-                            val successfulResultCount = results.count { it.isSuccessful() }
+                        val successfulResultCount = results.count { it.isSuccessful() }
 
-                            if (successfulResultCount == maxSuccessfulHosts) {
-                                rootJob.cancelAndJoin()
-                                return@async
-                            }
+                        if (successfulResultCount == maxSuccessfulHosts) {
+                            rootJob.cancelAndJoin()
+                            return@async
                         }
-
                     }
                 }.awaitAll()
             }
@@ -198,7 +195,7 @@ class QueryService constructor(
             }
         }
 
-        return results
+        return results.flatten(pageIndex)
     }
 
 
