@@ -1,6 +1,6 @@
 [![Release](https://jitpack.io/v/masterwok/tpb-search-android.svg)](https://jitpack.io/#masterwok/tpb-search-android)
 
-# open-subtitles-android
+# tpb-search-android
 An Android library for querying magnets from [thepiratebay.org](https://thepiratebay.org). The goal of this project is to provide a simple interface for querying thepiratebay.org via the site itself or through [various other proxies](https://github.com/masterwok/tpb-search-android/blob/master/tpbsearchandroid/src/main/java/com/masterwok/tpbsearchandroid/constants/Hosts.kt). 
 
 When a query is started, the library attempts to query against all defined hosts simultanteously until some maximum number of successful responses are received (maxSuccessfulHosts). When this happens, all remaining queries are cancelled. Should the successful response count never be hit after some defined timeout (queryTimeout), then all requests are cancelled. An attempt to query a single host is aborted after some defined timeout (requestTimeout) as well.
