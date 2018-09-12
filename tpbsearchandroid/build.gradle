@@ -26,7 +26,7 @@ android {
 }
 
 ext {
-    version_kotlinx_coroutines = '0.23.4'
+    version_kotlinx_coroutines = '0.25.3'
     version_support = '27.1.1'
 }
 
