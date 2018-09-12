@@ -1,12 +1,13 @@
-package com.masterwok.tpbsearchandroid.paging.search
+package com.masterwok.bitcast.paging.search
+
 
 import android.arch.lifecycle.MutableLiveData
 import android.arch.paging.PageKeyedDataSource
 import android.util.Log
+import com.masterwok.bitcast.paging.common.NetworkState
 import com.masterwok.tpbsearchandroid.contracts.QueryService
 import com.masterwok.tpbsearchandroid.models.QueryResult
 import com.masterwok.tpbsearchandroid.models.TorrentResult
-import com.masterwok.tpbsearchandroid.paging.common.NetworkState
 import kotlinx.coroutines.experimental.CoroutineStart
 import kotlinx.coroutines.experimental.Job
 import kotlinx.coroutines.experimental.launch
@@ -24,7 +25,7 @@ class TpbDataSource constructor(
     companion object {
         private const val Tag = "TpbDataSource"
 
-        private const val QueryTimeout = 10000L
+        private const val QueryTimeout = 10000
     }
 
     val networkState: MutableLiveData<NetworkState> = MutableLiveData()
@@ -41,15 +42,14 @@ class TpbDataSource constructor(
     ) {
         queryJob?.cancel()
 
+        if (query == null) {
+            return
+        }
+
+        networkState.postValue(NetworkState.LOADING)
+
         queryJob = launch {
             mutex.withLock {
-                if (query == null) {
-                    networkState.postValue(NetworkState.LOADED)
-                    callback.onResult(ArrayList(), null, null)
-                    return@withLock
-                }
-
-                networkState.postValue(NetworkState.LOADING)
 
                 val requestedLoadSize = params.requestedLoadSize
                 val queryResult = queryService.query(query, 0, QueryTimeout)
@@ -75,16 +75,14 @@ class TpbDataSource constructor(
             params: LoadParams<Long>
             , callback: LoadCallback<Long, TorrentResult>
     ) {
+        if (query == null) {
+            return
+        }
+
+        networkState.postValue(NetworkState.LOADING)
+
         launch {
             mutex.withLock {
-                if (query == null) {
-                    networkState.postValue(NetworkState.LOADED)
-                    callback.onResult(ArrayList(), null)
-                    return@withLock
-                }
-
-                networkState.postValue(NetworkState.LOADING)
-
                 val pageIndex = params.key.toInt()
                 val requestedLoadSize = params.requestedLoadSize
                 val itemOffset = pageIndex * requestedLoadSize
@@ -131,8 +129,7 @@ class TpbDataSource constructor(
                 }
 
                 // Timeout or error, retry request.
-                if (queryResult.state == QueryResult.State.TIMEOUT
-                        || queryResult.state == QueryResult.State.ERROR) {
+                if (queryResult.state == QueryResult.State.ERROR) {
                     networkState.postValue(NetworkState.ERROR)
                     setRetry { loadAfter(params, callback) }
                     return@withLock
@@ -196,3 +193,4 @@ class TpbDataSource constructor(
     }
 
 }
+

@@ -1,26 +1,38 @@
-package com.masterwok.tpbsearchandroid.paging.search
+package com.masterwok.bitcast.paging.search
 
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.masterwok.tpbsearchandroid.R
+import com.masterwok.bitcast.R
+import com.masterwok.bitcast.paging.common.NetworkPagedListAdapter
 import com.masterwok.tpbsearchandroid.models.TorrentResult
-import com.masterwok.tpbsearchandroid.paging.common.NetworkPagedListAdapter
 import kotlinx.android.synthetic.main.item_search_result.view.*
 
 class TpbItemViewHolder(
         itemView: View
+        , private val onClick: (torrentResult: TorrentResult?) -> Unit
 ) : RecyclerView.ViewHolder(itemView)
         , NetworkPagedListAdapter.NetworkViewHolder<TorrentResult?> {
 
     companion object {
-        fun create(parent: ViewGroup): TpbItemViewHolder {
+        fun create(
+                parent: ViewGroup
+                , onClick: (torrentResult: TorrentResult?) -> Unit
+        ): TpbItemViewHolder {
             val view = LayoutInflater
                     .from(parent.context)
                     .inflate(R.layout.item_search_result, parent, false)
 
-            return TpbItemViewHolder(view)
+            return TpbItemViewHolder(view, onClick)
+        }
+    }
+
+    private var model: TorrentResult? = null
+
+    init {
+        itemView.relativeLayoutSearchResult.setOnClickListener {
+            onClick(model)
         }
     }
 
@@ -33,6 +45,8 @@ class TpbItemViewHolder(
     }
 
     override fun configure(model: TorrentResult?) {
+        this.model = model
+
         if (model == null) {
             clear()
             return

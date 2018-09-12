@@ -1,10 +1,10 @@
-package com.masterwok.tpbsearchandroid.paging.common
+package com.masterwok.bitcast.paging.common
 
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.masterwok.tpbsearchandroid.R
+import com.masterwok.bitcast.R
 import kotlinx.android.synthetic.main.item_network_state.view.*
 
 

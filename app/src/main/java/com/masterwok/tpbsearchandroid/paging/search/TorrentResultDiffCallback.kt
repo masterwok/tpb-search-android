@@ -1,4 +1,4 @@
-package com.masterwok.tpbsearchandroid.paging.search
+package com.masterwok.bitcast.paging.search
 
 import android.support.v7.util.DiffUtil
 import com.masterwok.tpbsearchandroid.models.TorrentResult

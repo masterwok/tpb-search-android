@@ -1,4 +1,4 @@
-package com.masterwok.tpbsearchandroid.paging.common
+package com.masterwok.bitcast.paging.common
 
 import android.arch.paging.PagedListAdapter
 import android.support.v7.util.DiffUtil
