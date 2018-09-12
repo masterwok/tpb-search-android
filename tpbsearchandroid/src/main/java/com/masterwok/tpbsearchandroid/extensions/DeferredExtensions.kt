@@ -45,3 +45,46 @@ internal suspend fun <T> List<Deferred<T>>.awaitCount(
 
     return results
 }
+//internal suspend fun <T> List<Deferred<T>>.awaitCount(
+//        count: Int
+//        , timeoutMs: Long
+//): List<T> {
+//    require(count <= size)
+//
+//    val toAwait = HashSet(this)
+//    val results = ArrayList<T>()
+//    val ticker = ticker(timeoutMs)
+//
+//    val processed = HashSet<Deferred<T>>()
+//
+//    this.forEach {
+//        it.invokeOnCompletion {
+//            Log.d("DERP", "Completed: $it")
+//        }
+//    }
+//
+//    val derp = measureTimeMillis {
+//        whileSelect {
+//            ticker.onReceive { _ ->
+//                toAwait.forEach { it.cancel() }
+//                false
+//            }
+//
+//            toAwait.minus(processed).forEachIndexed { index, deferred ->
+//
+//                deferred.onAwait {
+//                    processed.add(deferred)
+//                    results.add(it)
+//
+//                    results.size < count
+//                }
+//            }
+//        }
+//    }
+//
+//    toAwait.forEach { it.cancel(TimeoutException()) }
+//
+//    val x = 1
+//
+//    return results
+//}

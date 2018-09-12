@@ -41,13 +41,15 @@ class QueryService constructor(
     ): List<Deferred<QueryResult<TorrentResult>>> = queryFactories.map { queryFactory ->
         async(start = CoroutineStart.LAZY) {
             try {
+                val url = queryFactory(query, pageIndex)
                 val document = makeRequest(
-                        queryFactory(query, pageIndex)
+//                        queryFactory(query, pageIndex)
+                        url
                         , timeoutMs
                 )
 
                 if (document.isValidResult()) {
-                    document.getQueryResult(pageIndex)
+                    document.getQueryResult(pageIndex, url)
                 } else {
                     QueryResult(state = QueryResult.State.INVALID)
                 }
@@ -71,9 +73,10 @@ class QueryService constructor(
                     , pageIndex = pageIndex
                     , timeoutMs = requestTimeout
             ).awaitCount(
-                    count = maxSuccessfulHosts
+//                    count = maxSuccessfulHosts
+                    count = queryFactories.size
 //                    , timeoutMs = queryTimeout
-                    , timeoutMs = 20000
+                    , timeoutMs = 2000
             ).flatten(
                     pageIndex = pageIndex
             )

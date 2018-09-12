@@ -22,7 +22,7 @@ internal fun Element?.isValidResult(): Boolean = this
         ?.isNotEmpty() == true
 
 
-internal fun Element?.getQueryResult(pageIndex: Int): QueryResult<TorrentResult> {
+internal fun Element?.getQueryResult(pageIndex: Int, url: String): QueryResult<TorrentResult> {
     val items = this?.select(SearchResultPath)
             ?.mapNotNull { it.tryParseSearchResultItem() }
             ?.sortedByDescending { it.seeders }
@@ -34,6 +34,7 @@ internal fun Element?.getQueryResult(pageIndex: Int): QueryResult<TorrentResult>
             pageIndex = pageIndex
             , lastPageIndex = this?.tryParseLastPageIndex() ?: 0
             , items = items
+            , url = url
     )
 }
 
