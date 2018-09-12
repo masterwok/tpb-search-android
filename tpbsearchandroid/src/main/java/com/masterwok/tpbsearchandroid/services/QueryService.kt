@@ -42,17 +42,11 @@ class QueryService constructor(
         async(start = CoroutineStart.LAZY) {
             try {
                 val url = queryFactory(query, pageIndex)
-                val document = makeRequest(
+                makeRequest(
 //                        queryFactory(query, pageIndex)
                         url
                         , timeoutMs
-                )
-
-                if (document.isValidResult()) {
-                    document.getQueryResult(pageIndex, url)
-                } else {
-                    QueryResult(state = QueryResult.State.INVALID)
-                }
+                ).getQueryResult(pageIndex, url)
             } catch (ex: Exception) {
                 QueryResult<TorrentResult>(state = QueryResult.State.ERROR)
             }
@@ -76,7 +70,7 @@ class QueryService constructor(
 //                    count = maxSuccessfulHosts
                     count = queryFactories.size
 //                    , timeoutMs = queryTimeout
-                    , timeoutMs = 2000
+                    , timeoutMs = 4000
             ).flatten(
                     pageIndex = pageIndex
             )

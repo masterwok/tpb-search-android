@@ -5,7 +5,6 @@ package com.masterwok.tpbsearchandroid.extensions
 import android.util.Log
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.channels.ticker
-import kotlinx.coroutines.experimental.selects.select
 import kotlinx.coroutines.experimental.selects.whileSelect
 import kotlin.system.measureTimeMillis
 
@@ -21,7 +20,19 @@ internal suspend fun <T> List<Deferred<T>>.awaitCount(
     val iterator = toAwait.iterator()
     val ticker = ticker(timeoutMs)
 
-    val derp = measureTimeMillis {
+    forEach { deferred ->
+        deferred.invokeOnCompletion {
+            val hasValue = !deferred.isCompletedExceptionally
+
+            if (hasValue) {
+                Log.d("DERP", "(Completed) Value: ${deferred.getCompleted()}")
+            } else {
+                Log.d("DERP", "(Completed) Exception: $it")
+            }
+        }
+    }
+
+    val elapsedTime = measureTimeMillis {
         whileSelect {
             ticker.onReceive { _ ->
                 toAwait.forEach { it.cancel() }
@@ -41,50 +52,8 @@ internal suspend fun <T> List<Deferred<T>>.awaitCount(
         }
     }
 
-    val x = 1
+    Log.d("DERP", "Elapsed time: $elapsedTime")
 
     return results
 }
-//internal suspend fun <T> List<Deferred<T>>.awaitCount(
-//        count: Int
-//        , timeoutMs: Long
-//): List<T> {
-//    require(count <= size)
-//
-//    val toAwait = HashSet(this)
-//    val results = ArrayList<T>()
-//    val ticker = ticker(timeoutMs)
-//
-//    val processed = HashSet<Deferred<T>>()
-//
-//    this.forEach {
-//        it.invokeOnCompletion {
-//            Log.d("DERP", "Completed: $it")
-//        }
-//    }
-//
-//    val derp = measureTimeMillis {
-//        whileSelect {
-//            ticker.onReceive { _ ->
-//                toAwait.forEach { it.cancel() }
-//                false
-//            }
-//
-//            toAwait.minus(processed).forEachIndexed { index, deferred ->
-//
-//                deferred.onAwait {
-//                    processed.add(deferred)
-//                    results.add(it)
-//
-//                    results.size < count
-//                }
-//            }
-//        }
-//    }
-//
-//    toAwait.forEach { it.cancel(TimeoutException()) }
-//
-//    val x = 1
-//
-//    return results
-//}
+

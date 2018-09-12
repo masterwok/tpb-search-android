@@ -19,9 +19,9 @@ data class QueryResult<T>(
 
     fun getItemCount(): Int = items.size
 
-    override fun toString(): String = "State: $state, " +
-            "Page: $pageIndex/$lastPageIndex, " +
-            "Item Count: ${items.size}" +
-            "Url: ${url}"
+    override fun toString(): String = "State: $state" +
+            ", Page: $pageIndex/$lastPageIndex" +
+            ", Item Count: ${items.size}" +
+            ", Url: $url"
 }
 
