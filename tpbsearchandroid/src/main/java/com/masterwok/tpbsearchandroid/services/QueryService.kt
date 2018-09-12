@@ -38,19 +38,19 @@ class QueryService constructor(
             , query: String
             , pageIndex: Int
             , timeoutMs: Int
-    ): List<Deferred<QueryResult<TorrentResult>>> = queryFactories.map {
+    ): List<Deferred<QueryResult<TorrentResult>>> = queryFactories.map { queryFactory ->
         async(start = CoroutineStart.LAZY) {
             try {
                 val document = makeRequest(
-                        it(query, pageIndex)
+                        queryFactory(query, pageIndex)
                         , timeoutMs
                 )
 
                 if (document.isValidResult()) {
                     document.getQueryResult(pageIndex)
+                } else {
+                    QueryResult(state = QueryResult.State.INVALID)
                 }
-
-                QueryResult<TorrentResult>(state = QueryResult.State.INVALID)
             } catch (ex: Exception) {
                 QueryResult<TorrentResult>(state = QueryResult.State.ERROR)
             }
@@ -72,17 +72,18 @@ class QueryService constructor(
                     , timeoutMs = requestTimeout
             ).awaitCount(
                     count = maxSuccessfulHosts
-                    , timeoutMs = queryTimeout
+//                    , timeoutMs = queryTimeout
+                    , timeoutMs = 20000
             ).flatten(
                     pageIndex = pageIndex
             )
         } catch (ex: Exception) {
             if (verboseLogging) {
-                Log.d(Tag, "An exception occurred while querying", ex)
+                Log.d(Tag, "An exception occurred during query", ex)
             }
-        }
 
-        return QueryResult(state = QueryResult.State.ERROR)
+            return QueryResult(state = QueryResult.State.ERROR)
+        }
     }
 
     private fun List<QueryResult<TorrentResult>>.flatten(
