@@ -1,10 +1,11 @@
-package com.masterwok.bitcast.paging.search
+package com.masterwok.tpbsearchandroid.paging.search
 
 
 import android.arch.lifecycle.MutableLiveData
 import android.arch.paging.PageKeyedDataSource
 import android.util.Log
-import com.masterwok.bitcast.paging.common.NetworkState
+import com.masterwok.tpbsearchandroid.contracts.DefaultRequestTimeout
+import com.masterwok.tpbsearchandroid.paging.common.NetworkState
 import com.masterwok.tpbsearchandroid.contracts.QueryService
 import com.masterwok.tpbsearchandroid.models.QueryResult
 import com.masterwok.tpbsearchandroid.models.TorrentResult
@@ -25,7 +26,7 @@ class TpbDataSource constructor(
     companion object {
         private const val Tag = "TpbDataSource"
 
-        private const val QueryTimeout = 10000
+        private const val QueryTimeout = 10000L
     }
 
     val networkState: MutableLiveData<NetworkState> = MutableLiveData()
@@ -52,7 +53,13 @@ class TpbDataSource constructor(
             mutex.withLock {
 
                 val requestedLoadSize = params.requestedLoadSize
-                val queryResult = queryService.query(query, 0, QueryTimeout)
+                val queryResult = queryService.query(
+                        query = query
+                        , pageIndex = 0
+                        , queryTimeout = QueryTimeout
+                        , requestTimeout = DefaultRequestTimeout
+                        , maxSuccessfulHosts = 5
+                )
 
                 if (queryResult.isSuccessful()) {
                     searchResults.addAll(queryResult.items)

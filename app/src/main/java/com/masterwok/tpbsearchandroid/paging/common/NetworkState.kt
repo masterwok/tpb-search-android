@@ -1,4 +1,4 @@
-package com.masterwok.bitcast.paging.common
+package com.masterwok.tpbsearchandroid.paging.common
 
 
 /**

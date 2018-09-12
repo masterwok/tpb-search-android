@@ -1,4 +1,4 @@
-package com.masterwok.bitcast.paging.search
+package com.masterwok.tpbsearchandroid.paging.search
 
 import android.arch.lifecycle.MutableLiveData
 import android.arch.paging.DataSource

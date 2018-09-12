@@ -33,7 +33,7 @@ class SearchFragment : Fragment() {
         searchAdapter = NetworkPagedListAdapter(
                 TorrentResultDiffCallback
                 , { viewModel.retry() }
-                , { parent -> TpbItemViewHolder.create(parent) }
+                , { parent -> TpbItemViewHolder.create(parent, {}) }
         )
 
         viewModel.getSearchResultLiveData().observe(this, Observer {
