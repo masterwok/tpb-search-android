@@ -43,7 +43,6 @@ class QueryService constructor(
             try {
                 val url = queryFactory(query, pageIndex)
                 makeRequest(
-//                        queryFactory(query, pageIndex)
                         url
                         , timeoutMs
                 ).getQueryResult(pageIndex, url)
