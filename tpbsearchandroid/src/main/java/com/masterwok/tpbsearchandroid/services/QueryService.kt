@@ -35,12 +35,10 @@ class QueryService constructor(
     ): List<Deferred<QueryResult<TorrentResult>?>> = queryFactories.map { queryFactory ->
         interruptAsync(queryExecutor, start = CoroutineStart.LAZY) {
             try {
-                val url = queryFactory(query, pageIndex)
-
                 val result = makeRequest(
-                        url
+                        queryFactory(query, pageIndex)
                         , timeoutMs
-                ).getQueryResult(pageIndex, url)
+                ).getQueryResult(pageIndex)
 
                 yield()
 
@@ -77,9 +75,7 @@ class QueryService constructor(
                     , timeoutMs = requestTimeout
             ).awaitCount(
                     count = maxSuccessfulHosts
-//                    , timeoutMs = queryTimeout
-//                    count = queryFactories.size
-                    , timeoutMs = 3000
+                    , timeoutMs = queryTimeout
             ).flatten(
                     pageIndex = pageIndex
             )

@@ -5,7 +5,6 @@ data class QueryResult<T>(
         , var pageIndex: Int = 0
         , var lastPageIndex: Int = 0
         , var items: List<T> = ArrayList()
-        , var url: String? = null
 ) {
     enum class State {
         PENDING,
@@ -21,7 +20,6 @@ data class QueryResult<T>(
 
     override fun toString(): String = "State: $state" +
             ", Page: $pageIndex/$lastPageIndex" +
-            ", Item Count: ${items.size}" +
-            ", Url: $url"
+            ", Item Count: ${items.size}"
 }
 

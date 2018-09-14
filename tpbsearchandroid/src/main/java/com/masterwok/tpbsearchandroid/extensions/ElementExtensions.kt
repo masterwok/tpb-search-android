@@ -23,7 +23,7 @@ internal fun Element?.isValidResult(): Boolean = this
         ?.isNotEmpty() == true
 
 
-internal fun Element?.getQueryResult(pageIndex: Int, url: String): QueryResult<TorrentResult> {
+internal fun Element?.getQueryResult(pageIndex: Int): QueryResult<TorrentResult> {
     if (!isValidResult()) {
         return QueryResult(state = QueryResult.State.INVALID)
     }
@@ -40,7 +40,6 @@ internal fun Element?.getQueryResult(pageIndex: Int, url: String): QueryResult<T
             , pageIndex = pageIndex
             , lastPageIndex = this?.tryParseLastPageIndex() ?: 0
             , items = items
-            , url = url
     )
 }
 
