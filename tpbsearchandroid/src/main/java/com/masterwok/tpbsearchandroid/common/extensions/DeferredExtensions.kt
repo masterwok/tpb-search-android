@@ -2,12 +2,10 @@
 
 package com.masterwok.tpbsearchandroid.common.extensions
 
-import android.util.Log
 import kotlinx.coroutines.experimental.Deferred
 import kotlinx.coroutines.experimental.channels.ticker
 import kotlinx.coroutines.experimental.selects.whileSelect
 import java.util.concurrent.CopyOnWriteArraySet
-import kotlin.system.measureTimeMillis
 
 
 /**
@@ -26,11 +24,11 @@ suspend fun <T> List<Deferred<T>>.awaitCount(
 
     val toAwait = CopyOnWriteArraySet<Deferred<T>>(this)
     val result = ArrayList<T>()
-    val ticket = ticker(timeoutMs)
+    val ticker = ticker(timeoutMs)
     var successCount = 0
 
     whileSelect {
-        ticket.onReceive {
+        ticker.onReceive {
             toAwait.forEach { deferred -> deferred.cancel() }
             false
         }
@@ -38,6 +36,11 @@ suspend fun <T> List<Deferred<T>>.awaitCount(
         toAwait.forEach { deferred ->
             deferred.onAwait {
                 toAwait.remove(deferred)
+
+                // Break out of the whileSelect if all deferred instances are cancelled or completed.
+                if (toAwait.all { deferred -> deferred.isCancelled || deferred.isCompleted }) {
+                    return@onAwait false
+                }
 
                 if (predicate(it)) {
                     result.add(it)
@@ -51,6 +54,8 @@ suspend fun <T> List<Deferred<T>>.awaitCount(
         }
     }
 
+    // Ensure all deferred instances are cancelled should the success count be reached before
+    // the timeout occurs.
     toAwait.forEach { deferred -> deferred.cancel() }
 
     return result
@@ -68,10 +73,10 @@ suspend fun <T> List<Deferred<T>>.awaitCount(
 
     val toAwait = CopyOnWriteArraySet<Deferred<T>>(this)
     val result = ArrayList<T>()
-    val ticket = ticker(timeoutMs)
+    val ticker = ticker(timeoutMs)
 
     whileSelect {
-        ticket.onReceive {
+        ticker.onReceive {
             toAwait.forEach { deferred -> deferred.cancel() }
             false
         }
@@ -79,6 +84,12 @@ suspend fun <T> List<Deferred<T>>.awaitCount(
         toAwait.forEach { deferred ->
             deferred.onAwait {
                 toAwait.remove(deferred)
+
+                // Break out of the whileSelect if all deferred instances are cancelled or completed.
+                if (toAwait.all { deferred -> deferred.isCancelled || deferred.isCompleted }) {
+                    return@onAwait false
+                }
+
                 result.add(it)
 
                 result.size < count
@@ -86,6 +97,8 @@ suspend fun <T> List<Deferred<T>>.awaitCount(
         }
     }
 
+    // Ensure all deferred instances are cancelled should the success count be reached before
+    // the timeout occurs.
     toAwait.forEach { deferred -> deferred.cancel() }
 
     return result

@@ -82,8 +82,6 @@ class TpbDataSource constructor(
             params: LoadParams<Long>
             , callback: LoadCallback<Long, TorrentResult>
     ) {
-        return
-
         if (query == null) {
             return
         }

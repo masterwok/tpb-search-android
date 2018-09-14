@@ -11,7 +11,6 @@ import com.masterwok.tpbsearchandroid.models.QueryResult
 import com.masterwok.tpbsearchandroid.models.TorrentResult
 import kotlinx.coroutines.experimental.*
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
 import java.util.concurrent.Executors
 
 class QueryService constructor(
@@ -31,15 +30,17 @@ class QueryService constructor(
             queryFactories: List<(query: String, pageIndex: Int) -> String>
             , query: String
             , pageIndex: Int
-            , timeoutMs: Int
+            , requestTimeout: Int
     ): List<Deferred<QueryResult<TorrentResult>?>> = queryFactories.map { queryFactory ->
         interruptAsync(queryExecutor, start = CoroutineStart.LAZY) {
             try {
-                val result = makeRequest(
+                val result = queryEndpoint(
                         queryFactory(query, pageIndex)
-                        , timeoutMs
-                ).getQueryResult(pageIndex)
+                        , pageIndex
+                        , requestTimeout
+                )
 
+                // Yield further processing should this coroutine no longer be active.
                 yield()
 
                 Log.d(Tag, "Active: $isActive, $result")
@@ -51,13 +52,19 @@ class QueryService constructor(
         }
     }
 
-    private fun makeRequest(
+    private fun queryEndpoint(
             url: String
+            , pageIndex: Int
             , requestTimeoutMs: Int
-    ): Document? = try {
-        Jsoup.connect(url).timeout(requestTimeoutMs).get()
-    } catch (ex: Exception) {
-        null
+    ): QueryResult<TorrentResult> {
+        return try {
+            Jsoup.connect(url)
+                    .timeout(requestTimeoutMs)
+                    .get()
+                    .getQueryResult(pageIndex)
+        } catch (ex: Exception) {
+            QueryResult(state = QueryResult.State.ERROR)
+        }
     }
 
     override suspend fun query(
@@ -72,7 +79,7 @@ class QueryService constructor(
                     queryFactories = queryFactories
                     , query = query
                     , pageIndex = pageIndex
-                    , timeoutMs = requestTimeout
+                    , requestTimeout = requestTimeout
             ).awaitCount(
                     count = maxSuccessfulHosts
                     , timeoutMs = queryTimeout
@@ -94,14 +101,13 @@ class QueryService constructor(
             pageIndex: Int
     ): QueryResult<TorrentResult> {
         val results = filterNotNull()
-        var qwer = this
 
         val successResults = results.filter { it.state == QueryResult.State.SUCCESS }
         val invalidResults = results.filter { it.state == QueryResult.State.INVALID }
         val errorResults = results.filter { it.state == QueryResult.State.ERROR }
 
         if (successResults.isEmpty()) {
-            if (invalidResults.isNotEmpty()) {
+            if (invalidResults.isNotEmpty() && errorResults.isEmpty()) {
                 return QueryResult(state = QueryResult.State.INVALID)
             }
 
