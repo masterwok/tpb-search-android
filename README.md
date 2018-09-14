@@ -16,7 +16,6 @@ Simply invoke ```QueryService.query(..)``` to query for magnets. For example, to
 ```kotlin
 val queryService: QuerySerivce = QueryService(
     queryFactories = QueryFactories
-    , verboseLogging = true
 )
 
 ...
