@@ -7,7 +7,8 @@ When a query is started, the library attempts to query against all defined hosts
 
 Once all of the responses are received they are flattened down into a single [QueryResult](https://github.com/masterwok/tpb-search-android/blob/master/tpbsearchandroid/src/main/java/com/masterwok/tpbsearchandroid/models/QueryResult.kt) containing [TorrentResult](https://github.com/masterwok/tpb-search-android/blob/master/tpbsearchandroid/src/main/java/com/masterwok/tpbsearchandroid/models/TorrentResult.kt) items and paging state.
 
-For a detailed example of how to use the library with a RecyclerView and the [Android JetPack Paging](https://developer.android.com/topic/libraries/architecture/paging/) library that handles errors, paging, queries, and retries please see the demo application alongside this library.
+Please see the companion demo application of this library for a detailed example of how to use this library alongside the [Android JetPack Paging](https://developer.android.com/topic/libraries/architecture/paging/) library.
+
 
 ## Usage
 
