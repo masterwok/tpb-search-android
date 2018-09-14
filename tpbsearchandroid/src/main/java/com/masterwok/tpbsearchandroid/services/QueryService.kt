@@ -107,6 +107,7 @@ class QueryService constructor(
         val errorResults = results.filter { it.state == QueryResult.State.ERROR }
 
         if (successResults.isEmpty()) {
+            // All results were invalid (this might mean this page is broken, consider skipping)
             if (invalidResults.isNotEmpty() && errorResults.isEmpty()) {
                 return QueryResult(state = QueryResult.State.INVALID)
             }

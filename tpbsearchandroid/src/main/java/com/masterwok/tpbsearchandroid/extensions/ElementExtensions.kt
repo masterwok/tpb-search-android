@@ -47,8 +47,6 @@ private fun Element.tryParseLastPageIndex(): Int {
     val pageLinks = select(PageSelectPath)
     val pageCount: Int
 
-    val html = this.html()
-
     val imageLink = pageLinks
             .last()
             ?.select("img")
