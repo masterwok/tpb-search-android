@@ -16,10 +16,6 @@ class QueryService constructor(
         private val queryFactories: List<(query: String, pageIndex: Int) -> String>
 ) : QueryService {
 
-    companion object {
-        const val Tag = "QueryService"
-    }
-
     private val queryExecutor = Executors
             .newCachedThreadPool()
             .asCoroutineDispatcher()
