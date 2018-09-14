@@ -76,6 +76,8 @@ class QueryService constructor(
             ).awaitCount(
                     count = maxSuccessfulHosts
                     , timeoutMs = queryTimeout
+                    , keepUnsuccessful = true
+                    , predicate = { queryResult -> queryResult?.isSuccessful() == true }
             ).flatten(
                     pageIndex = pageIndex
             )
