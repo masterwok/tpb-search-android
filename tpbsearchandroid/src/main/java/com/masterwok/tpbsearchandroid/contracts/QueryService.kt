@@ -1,3 +1,5 @@
+@file:Suppress("EXPERIMENTAL_FEATURE_WARNING")
+
 package com.masterwok.tpbsearchandroid.contracts
 
 import com.masterwok.tpbsearchandroid.models.QueryResult

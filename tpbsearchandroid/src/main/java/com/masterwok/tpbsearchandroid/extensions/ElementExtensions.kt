@@ -10,8 +10,8 @@ private const val TitleSelectPath = "td:nth-child(2) > div"
 private const val MagnetSelectPath = "td:nth-child(2) > a:nth-child(2)"
 private const val SeedersSelectPath = "td:nth-child(3)"
 private const val LeechersSelectPath = "td:nth-child(4)"
-//private const val PageSelectPath = "body > div:nth-child(6) > a"
-private const val PageSelectPath = "#content > div:nth-child(3) > a"
+private const val PageSelectPath = "body > div:nth-child(6) > a"
+private const val PageSelectPathB = "#content > div:nth-child(3) > a"
 private const val InfoSelector = "td:nth-child(2) > font"
 
 private val InfoRegex = Regex("""Uploaded\s*([\d\W]*),\s*Size\s*(.*),""")
@@ -44,8 +44,12 @@ internal fun Element?.getQueryResult(pageIndex: Int): QueryResult<TorrentResult>
 }
 
 private fun Element.tryParseLastPageIndex(): Int {
-    val pageLinks = select(PageSelectPath)
     val pageCount: Int
+    var pageLinks = select(PageSelectPath)
+
+    if (pageLinks.isEmpty()) {
+        pageLinks = select(PageSelectPathB)
+    }
 
     val imageLink = pageLinks
             .last()

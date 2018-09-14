@@ -2,7 +2,6 @@
 
 package com.masterwok.tpbsearchandroid.services
 
-import android.util.Log
 import com.masterwok.tpbsearchandroid.common.extensions.awaitCount
 import com.masterwok.tpbsearchandroid.contracts.QueryService
 import com.masterwok.tpbsearchandroid.extensions.getQueryResult
@@ -15,7 +14,6 @@ import java.util.concurrent.Executors
 
 class QueryService constructor(
         private val queryFactories: List<(query: String, pageIndex: Int) -> String>
-        , private val verboseLogging: Boolean = false
 ) : QueryService {
 
     companion object {
@@ -42,8 +40,6 @@ class QueryService constructor(
 
                 // Yield further processing should this coroutine no longer be active.
                 yield()
-
-                Log.d(Tag, "Active: $isActive, $result")
 
                 result
             } catch (ex: Exception) {
@@ -89,10 +85,6 @@ class QueryService constructor(
                     pageIndex = pageIndex
             )
         } catch (ex: Exception) {
-            if (verboseLogging) {
-                Log.d(Tag, "An exception occurred during query", ex)
-            }
-
             return QueryResult(state = QueryResult.State.ERROR)
         }
     }

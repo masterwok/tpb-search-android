@@ -39,7 +39,9 @@ private fun queryStringQuery(
  */
 @JvmField
 val QueryFactories: List<(query: String, pageIndex: Int) -> String> = listOf(
-        { query, pageIndex -> queryStringQuery("https://superbay.in", query, pageIndex) }
+        { query, pageIndex -> queryStringQuery("https://thepiratebay.org", query, pageIndex) }
+        , { query, pageIndex -> queryStringQuery("https://thepiratebay.online", query, pageIndex) }
+        , { query, pageIndex -> queryStringQuery("https://superbay.in", query, pageIndex) }
         , { query, pageIndex -> queryStringQuery("https://superbay.in", query, pageIndex) }
         , { query, pageIndex -> queryStringQuery("https://piratebays.be", query, pageIndex) }
         , { query, pageIndex -> queryStringQuery("https://piratebays.fi", query, pageIndex) }
