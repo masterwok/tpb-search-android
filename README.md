@@ -26,7 +26,7 @@ launch() {
             query = "The Hobbit 1977"
             , pageIndex = 0
             , queryTimeout = 10000L
-            , requestTimeout = 5000L
+            , requestTimeout = 5000
             , maxSuccessfulHosts = 5
     ): QueryResult<TorrentResult>
 }
