@@ -24,14 +24,14 @@ class QueryService constructor(
     override suspend fun query(
             query: String
             , pageIndex: Int
-            , queryTimeout: Long
-            , requestTimeout: Int
+            , queryTimeoutMs: Long
+            , requestTimeoutMs: Int
     ): QueryResult<TorrentResult> = getFirstValidResult(
             queryFactories = queryFactories
             , query = query
             , pageIndex = pageIndex
-            , requestTimeoutMs = requestTimeout
-            , queryTimeoutMs = queryTimeout
+            , requestTimeoutMs = requestTimeoutMs
+            , queryTimeoutMs = queryTimeoutMs
     )
 
     private suspend fun getFirstValidResult(
