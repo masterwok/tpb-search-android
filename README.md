@@ -3,9 +3,7 @@
 # tpb-search-android
 An Android library for querying magnets from [thepiratebay.org](https://thepiratebay.org). The goal of this project is to provide a simple interface for querying thepiratebay.org via the site itself or through [various other proxies](https://github.com/masterwok/tpb-search-android/blob/master/tpbsearchandroid/src/main/java/com/masterwok/tpbsearchandroid/constants/Hosts.kt). 
 
-When a query is started, the library attempts to query against all defined hosts simultaneously until the ```maxSuccessfulHosts``` count is achieved. When this happens, all pending queries are cancelled. Should the ```maxSuccessfulHosts``` count never be hit after the defined ```queryTimeout``` expires, then all pending queries are cancelled. An attempt to query a single host is aborted after the defined ```requestTimeout```.
-
-Once all of the responses are received they are flattened down into a single [QueryResult](https://github.com/masterwok/tpb-search-android/blob/master/tpbsearchandroid/src/main/java/com/masterwok/tpbsearchandroid/models/QueryResult.kt) containing [TorrentResult](https://github.com/masterwok/tpb-search-android/blob/master/tpbsearchandroid/src/main/java/com/masterwok/tpbsearchandroid/models/TorrentResult.kt) items and paging state.
+When a query is started, the library attempts to query against all defined hosts simultaneously a successful [QueryResult](https://github.com/masterwok/tpb-search-android/blob/master/tpbsearchandroid/src/main/java/com/masterwok/tpbsearchandroid/models/QueryResult.kt) containing [TorrentResult](https://github.com/masterwok/tpb-search-android/blob/master/tpbsearchandroid/src/main/java/com/masterwok/tpbsearchandroid/models/TorrentResult.kt) instances is returned from an endpoint. When this happens, all pending queries are cancelled. A request to an endpoint will timeout after the defined, ```requestTimeout```. The query as a whole will timeout after the defined ```queryTimeout```.
 
 Please see the companion demo application of this library for a detailed example of how to use this library alongside the [Android JetPack Paging](https://developer.android.com/topic/libraries/architecture/paging/) library.
 
@@ -27,7 +25,6 @@ launch() {
             , pageIndex = 0
             , queryTimeout = 10000L
             , requestTimeout = 5000
-            , maxSuccessfulHosts = 5
     ): QueryResult<TorrentResult>
 }
 ```
