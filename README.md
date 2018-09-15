@@ -1,13 +1,14 @@
 [![Release](https://jitpack.io/v/masterwok/tpb-search-android.svg)](https://jitpack.io/#masterwok/tpb-search-android)
 
-# [WORK IN PROGRESS|NOT READY] tpb-search-android
+# tpb-search-android
 An Android library for querying magnets from [thepiratebay.org](https://thepiratebay.org). The goal of this project is to provide a simple interface for querying thepiratebay.org via the site itself or through [various other proxies](https://github.com/masterwok/tpb-search-android/blob/master/tpbsearchandroid/src/main/java/com/masterwok/tpbsearchandroid/constants/Hosts.kt). 
 
-When a query is started, the library attempts to query against all defined hosts simultanteously until some maximum number of successful responses are received (maxSuccessfulHosts). When this happens, all remaining queries are cancelled. Should the successful response count never be hit after some defined timeout (queryTimeout), then all requests are cancelled. An attempt to query a single host is aborted after some defined timeout (requestTimeout) as well.
+When a query is started, the library attempts to query against all defined hosts simultanteously until the ```maxSuccessfulHosts``` count is achieved. When this happens, all pending queries are cancelled. Should the ```maxSuccessfulHosts``` count never be hit after the defined ```queryTimeout``` expires, then all pending queries are cancelled. An attempt to query a single host is aborted after the defined ```requestTimeout```.
 
 Once all of the responses are received they are flattened down into a single [QueryResult](https://github.com/masterwok/tpb-search-android/blob/master/tpbsearchandroid/src/main/java/com/masterwok/tpbsearchandroid/models/QueryResult.kt) containing [TorrentResult](https://github.com/masterwok/tpb-search-android/blob/master/tpbsearchandroid/src/main/java/com/masterwok/tpbsearchandroid/models/TorrentResult.kt) items and paging state.
 
-For a detailed example of how to use the library with a RecyclerView and the [Android JetPack Paging](https://developer.android.com/topic/libraries/architecture/paging/) library that handles errors, paging, queries, and retries please see the demo application alongside this library.
+Please see the companion demo application of this library for a detailed example of how to use this library alongside the [Android JetPack Paging](https://developer.android.com/topic/libraries/architecture/paging/) library.
+
 
 ## Usage
 
@@ -16,7 +17,6 @@ Simply invoke ```QueryService.query(..)``` to query for magnets. For example, to
 ```kotlin
 val queryService: QuerySerivce = QueryService(
     queryFactories = QueryFactories
-    , verboseLogging = true
 )
 
 ...
@@ -26,7 +26,7 @@ launch() {
             query = "The Hobbit 1977"
             , pageIndex = 0
             , queryTimeout = 10000L
-            , requestTimeout = 5000L
+            , requestTimeout = 5000
             , maxSuccessfulHosts = 5
     ): QueryResult<TorrentResult>
 }
