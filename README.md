@@ -43,7 +43,7 @@ and add the following in the dependent module:
 
 ```gradle
 dependencies {
-    implementation 'com.github.masterwok:tpb-search-android:0.0.2'
+    implementation 'com.github.masterwok:tpb-search-android:0.0.3'
 }
 ```
 
