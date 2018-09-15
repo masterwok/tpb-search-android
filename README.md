@@ -3,7 +3,7 @@
 # tpb-search-android
 An Android library for querying magnets from [thepiratebay.org](https://thepiratebay.org). The goal of this project is to provide a simple interface for querying thepiratebay.org via the site itself or through [various other proxies](https://github.com/masterwok/tpb-search-android/blob/master/tpbsearchandroid/src/main/java/com/masterwok/tpbsearchandroid/constants/Hosts.kt). 
 
-When a query is started, the library attempts to query against all defined hosts simultanteously until the ```maxSuccessfulHosts``` count is achieved. When this happens, all pending queries are cancelled. Should the ```maxSuccessfulHosts``` count never be hit after the defined ```queryTimeout``` expires, then all pending queries are cancelled. An attempt to query a single host is aborted after the defined ```requestTimeout```.
+When a query is started, the library attempts to query against all defined hosts simultaneously until the ```maxSuccessfulHosts``` count is achieved. When this happens, all pending queries are cancelled. Should the ```maxSuccessfulHosts``` count never be hit after the defined ```queryTimeout``` expires, then all pending queries are cancelled. An attempt to query a single host is aborted after the defined ```requestTimeout```.
 
 Once all of the responses are received they are flattened down into a single [QueryResult](https://github.com/masterwok/tpb-search-android/blob/master/tpbsearchandroid/src/main/java/com/masterwok/tpbsearchandroid/models/QueryResult.kt) containing [TorrentResult](https://github.com/masterwok/tpb-search-android/blob/master/tpbsearchandroid/src/main/java/com/masterwok/tpbsearchandroid/models/TorrentResult.kt) items and paging state.
 
@@ -46,7 +46,7 @@ and add the following in the dependent module:
 
 ```gradle
 dependencies {
-    implementation 'com.github.masterwok:tpb-search-android:0.0.1'
+    implementation 'com.github.masterwok:tpb-search-android:0.0.2'
 }
 ```
 
