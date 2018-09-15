@@ -24,7 +24,6 @@ class SearchViewModel : ViewModel() {
             .services
             .QueryService(
                     QueryFactories
-                    , verboseLogging = true
             )
 
     private val rootJob = Job()
