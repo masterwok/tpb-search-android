@@ -26,7 +26,6 @@ class QueryService constructor(
             , pageIndex: Int
             , queryTimeout: Long
             , requestTimeout: Int
-            , maxSuccessfulHosts: Int
     ): QueryResult<TorrentResult> = getFirstValidResult(
             queryFactories = queryFactories
             , query = query

@@ -58,7 +58,6 @@ class TpbDataSource constructor(
                         , pageIndex = 0
                         , queryTimeout = QueryTimeout
                         , requestTimeout = DefaultRequestTimeout
-                        , maxSuccessfulHosts = 5
                 )
 
                 if (queryResult.isSuccessful()) {
