@@ -20,6 +20,21 @@ class QueryService constructor(
             .newCachedThreadPool()
             .asCoroutineDispatcher()
 
+    private fun queryEndpoint(
+            url: String
+            , pageIndex: Int
+            , requestTimeoutMs: Int
+    ): QueryResult<TorrentResult> {
+        return try {
+            Jsoup.connect(url)
+                    .timeout(requestTimeoutMs)
+                    .get()
+                    .getQueryResult(pageIndex)
+        } catch (ex: Exception) {
+            QueryResult(state = QueryResult.State.ERROR)
+        }
+    }
+
     private fun createAsyncRequests(
             queryFactories: List<(query: String, pageIndex: Int) -> String>
             , query: String
@@ -44,20 +59,6 @@ class QueryService constructor(
         }
     }
 
-    private fun queryEndpoint(
-            url: String
-            , pageIndex: Int
-            , requestTimeoutMs: Int
-    ): QueryResult<TorrentResult> {
-        return try {
-            Jsoup.connect(url)
-                    .timeout(requestTimeoutMs)
-                    .get()
-                    .getQueryResult(pageIndex)
-        } catch (ex: Exception) {
-            QueryResult(state = QueryResult.State.ERROR)
-        }
-    }
 
     override suspend fun query(
             query: String
