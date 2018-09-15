@@ -17,14 +17,14 @@ interface QueryService {
     /**
      * Simultaneously query each host using the provided [query] and [pageIndex]. The [query]
      * is the search query, and the [pageIndex] is the result page index. Each request will
-     * timeout after some [requestTimeout] and the whole query will timeout after some
-     * [queryTimeout].
+     * timeout after some [requestTimeoutMs] and the whole query will timeout after some
+     * [queryTimeoutMs].
      */
     suspend fun query(
             query: String
             , pageIndex: Int = 0
-            , queryTimeout: Long = DefaultQueryTimeout
-            , requestTimeout: Int = DefaultRequestTimeout
+            , queryTimeoutMs: Long = DefaultQueryTimeout
+            , requestTimeoutMs: Int = DefaultRequestTimeout
     ): QueryResult<TorrentResult>
 
 }

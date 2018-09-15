@@ -56,8 +56,8 @@ class TpbDataSource constructor(
                 val queryResult = queryService.query(
                         query = query
                         , pageIndex = 0
-                        , queryTimeout = QueryTimeout
-                        , requestTimeout = DefaultRequestTimeout
+                        , queryTimeoutMs = QueryTimeout
+                        , requestTimeoutMs = DefaultRequestTimeout
                 )
 
                 if (queryResult.isSuccessful()) {
