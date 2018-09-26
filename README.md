@@ -48,7 +48,7 @@ dependencies {
 ```
 
 ## Projects using tpb-search-android
-- [Bit Cast](https://play.google.com/store/apps/details?id=com.mas
+- [Bit Cast](https://play.google.com/store/apps/details?id=com.masterwok.bitcast)
 
 ## Demo Screenshot
 
