@@ -47,6 +47,9 @@ dependencies {
 }
 ```
 
+## Projects using tpb-search-android
+- [Bit Cast](https://play.google.com/store/apps/details?id=com.mas
+
 ## Demo Screenshot
 
 <img src="/app/screenshots/search_screenshot.jpg?raw=true" height="600" title="Demo Search">
