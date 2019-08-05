@@ -1,6 +1,9 @@
 [![Release](https://jitpack.io/v/masterwok/tpb-search-android.svg)](https://jitpack.io/#masterwok/tpb-search-android)
 
-# tpb-search-android
+# [deprecated] tpb-search-android
+
+I'm not longer maintaining this project due to time constraints.
+
 An Android library for querying magnets from [thepiratebay.org](https://thepiratebay.org).
 
 When a query is started, the library attempts to query against all defined [hosts](https://github.com/masterwok/tpb-search-android/blob/master/tpbsearchandroid/src/main/java/com/masterwok/tpbsearchandroid/constants/Hosts.kt) simultaneously until an endpoint successfully returns a [QueryResult](https://github.com/masterwok/tpb-search-android/blob/master/tpbsearchandroid/src/main/java/com/masterwok/tpbsearchandroid/models/QueryResult.kt) containing [TorrentResult](https://github.com/masterwok/tpb-search-android/blob/master/tpbsearchandroid/src/main/java/com/masterwok/tpbsearchandroid/models/TorrentResult.kt) instances. When this happens, all pending queries are cancelled. A request to an endpoint will timeout after the defined ```requestTimeoutMs```. The query as a whole will timeout after the defined ```queryTimeoutMs```.
